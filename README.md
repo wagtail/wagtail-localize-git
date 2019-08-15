@@ -30,6 +30,8 @@ To migrate existing page types to be translatable, use the `BootstrapTranslatabl
 
 ## Running initial sync
 
+When adding to an existing site, we firstly need to manually submit any existing content to Pontoon.
+
 Firstly run the `sync_languages` command. This creates `Language` objects for all the languages defined in your `LANGUAGES` setting.
 
 Then run the `submit_whole_site_to_pontoon` management command. This generates submissions for all live translatable pages on the site.
@@ -42,23 +44,22 @@ This relies heavily on `wagtail-localize`'s `translation_memory` module to track
 
 ### Creating submissions
 
-When the user publishes an english version of the page, the following steps happen:
+Pages are submitted to Pontoon when the English (US) version of any transltable page is published. Nothing is uploaded to git at this time (this would be done when the `sync_pontoon` management command is next run), but the following happens when the page is published:
 
- - All translatable segments are extracted from the page and saved in the `translation_memory.Segment` model. This model holds unique source strings, the locations these strings appear on pages is stored in the `translation_memory.SegmentPageLocation` model.
- - A `wagtail_localize_pontoon.PontoonResourceSubmission` object is created to note which page revision needs to be submitted to Pontoon.
+ - All translatable segments are extracted from the page and saved into the `translation_memory.Segment` model. This model holds unique source strings, the locations where these strings appear on actual pages is stored in the `translation_memory.SegmentPageLocation` model.
+ - A `wagtail_localize_pontoon.PontoonResourceSubmission` is created to note which page revision needs to be submitted to Pontoon.
 
-The `submit_whole_site_to_pontoon` command runs this process for all live translatable pages.
+Note: The `submit_whole_site_to_pontoon` command runs this process for all live translatable pages.
 
 ### Pushing source strings to Pontoon
 
-The `sync_pontoon` command firstly fetches the git repo, then checks for and imports any translated strings. More about this later.
+The `sync_pontoon` command firstly fetches the git repo, then checks for and imports any translated strings. This is covered in the next section.
 
-After this, it will write all of the source and locale `.po` files based on the records in `PontoonResourceSubmission` and the segments/translations in translation memory.
+After new translations are ingested (if there are any), it will rewrite all of the source and locale `.po` files based on the records in `PontoonResourceSubmission` and the segments/translations in translation memory.
 
-Any new strings are added into both the source `.pot` file and each locale-specific `.po` file, this is because Pontoon will not send back any
-translations unless the source string is also added into each locale-specific `.po` file.
+Note: All source strings are added into both the source `.pot` file and each locale-specific `.po` file, because Pontoon will not send back translations unless the source strings exist in both places.
 
-If a string is no longer used on a page, it is removed from the source `.pot` file, but may be left in the locale-specific `.po` files if a translation existed for that string but will be flagged as obsolete.
+If a segment is no longer used on a page, it is removed from the source `.pot` file, but may be left in the locale-specific `.po` files if a translation existed for that string but will be flagged as obsolete.
 
 ### Pulling translations from Pontoon
 
@@ -66,10 +67,9 @@ At the beginning of the `sync_pontoon` command, the git repo is fetched and if t
 
 If any of the locale PO files have been modified, they will be parsed and any new/changed translations saved in the `translation_memory.SegmentTranslation` model.
 
-After a locale PO file is imported, it then checks the translation progress of that page/language by making a query against the `translation_memory` models, if it is ready, it creates or updates the translated version of the page.
+After a locale PO file is imported, the translation progress of the associated page is checked by making a query against the `translation_memory.{Segment,SegmentTranslation}` models. If the page is ready to be translated, it will create/update the translated version of the page and publish it.
 
-If a page is ready to be translated, but it's parent is not translated into the target language, the translation is delayed until the parent is translated and will be done automatically when this has happend.
-
+If a page is ready to be translated, but it's parent is not translated into the target language, the translation is delayed until the parent is translated.
 
 ### Caveats
 
