@@ -4,12 +4,35 @@ from django.db.models import F
 from django.utils import timezone
 import polib
 
-from wagtail_localize.models import Language, Locale
+from wagtail_localize.models import Language, Locale, ParentNotTranslatedError
 from wagtail_localize.translation_memory.models import Segment
 
 from ...git import Repository
 from ...models import PontoonResourceSubmission, PontoonResource
 from ...pofile import generate_source_pofile, generate_language_pofile
+
+
+def try_update_resource_translation(resource, language):
+    # Check if there is a submission ready to be translated
+    translatable_submission = resource.find_translatable_submission(language)
+
+    if translatable_submission:
+        print(f"Saving translated page for '{resource.page.title}'")
+
+        try:
+            revision, created = translatable_submission.create_or_update_translated_page(language)
+        except ParentNotTranslatedError:
+            # These pages will be handled when the parent is created in the code below
+            print("Unable to save translated page as its parent must be translated first")
+
+        if created:
+            # Check if this page has any children that may be ready to translate
+            child_page_resources = PontoonResource.objects.filter(
+                page__in=revision.page.get_children()
+            )
+
+            for resource in child_page_resources:
+                try_update_resource_translation(resource, language)
 
 
 class Command(BaseCommand):
@@ -26,17 +49,32 @@ class Command(BaseCommand):
             old_po = polib.pofile(old_content.decode('utf-8'))
             new_po = polib.pofile(new_content.decode('utf-8'))
 
-            for changed_entry in set(new_po) - set(old_po):
-                try:
-                    segment = Segment.objects.get(text=changed_entry.msgid)
-                    segment.translations.update_or_create(
-                        language=language,
-                        defaults={
-                            'text': changed_entry.msgstr,
-                        }
-                    )
-                except Segment.objects.DoesNotExist:
-                    print("Warning: unrecognised segment")
+            with transaction.atomic():
+                for changed_entry in set(new_po) - set(old_po):
+                    try:
+                        segment = Segment.objects.get(text=changed_entry.msgid)
+                        translation, created = segment.translations.get_or_create(
+                            language=language,
+                            defaults={
+                                'text': changed_entry.msgstr,
+                                'updated_at': timezone.now(),
+                            }
+                        )
+
+                        if not created:
+                            # Update the translation only if the text has changed
+                            if translation.text != changed_entry.msgstr:
+                                translation.text = changed_entry.msgstr
+                                translation.updated_at = timezone.now()
+                                translation.save()
+
+                                # TODO: Update previously translated pages that used this string?
+
+                    except Segment.objects.DoesNotExist:
+                        print("Warning: unrecognised segment")
+
+                # Check if the translated page is ready to be created/updated
+                try_update_resource_translation(resource, language)
 
         merger.commit()
 
@@ -83,8 +121,4 @@ class Command(BaseCommand):
             if writer.has_changes():
                 print("Committing changes")
                 writer.commit("Updates to source content")
-                repo.try_push()
-
-
-
-
+                repo.push()

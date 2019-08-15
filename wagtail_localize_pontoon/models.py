@@ -9,7 +9,9 @@ from wagtail.core.signals import page_published
 from wagtail_localize.models import TranslatablePageMixin, Locale, Language
 from wagtail_localize.segments.extract import extract_segments
 from wagtail_localize.translation_memory.models import Segment, SegmentPageLocation
-from wagtail_localize.translation_memory.utils import insert_segments
+from wagtail_localize.translation_memory.utils import insert_segments, get_translation_progress
+
+from .page_updater import create_or_update_translated_page
 
 
 class PontoonResource(models.Model):
@@ -115,9 +117,46 @@ class PontoonResource(models.Model):
 
         return segments.order_by('page_locations__order', 'id').distinct()
 
+    def find_translatable_submission(self, language):
+        """
+        Look to see if a submission is ready for translating.
+
+        The returned submission will be the latest submission that is ready for translation, after any previous
+        translated submission.
+
+        A submission is considered translatable if all the strings in the submission have been translated into the
+        target language and the translated page hasn't been updated for that submission or a later one.
+        """
+        submissions_to_check = self.submissions.order_by('-created_at')
+
+        # Exclude submissions that pre-date the last translated submission
+        last_translated_submission = self.submissions.annotate_translated(language).filter(is_translated=True).order_by('created_at').last()
+        if last_translated_submission is not None:
+            submissions_to_check = submissions_to_check.filter(created_at__gt=last_translated_submission.created_at)
+
+        for submission in submissions_to_check:
+            translated_segments, total_segments = submission.get_translation_progress(language)
+
+            if translated_segments == total_segments:
+                return submission
+
     def __repr__(self):
         return f"<PontoonResource '{self.get_po_filename()}'>"
 
+
+class PontoonResourceSubmissionQuerySet(models.QuerySet):
+    def annotate_translated(self, language):
+        """
+        Adds is_translated flag which is True if the submission has been translated into the specified language.
+        """
+        return self.annotate(
+            is_translated=Exists(
+                PontoonResourceTranslation.objects.filter(
+                    submission_id=OuterRef('pk'),
+                    language=language,
+                )
+            )
+        )
 
 class PontoonResourceSubmission(models.Model):
     resource = models.ForeignKey(PontoonResource, on_delete=models.CASCADE, related_name='submissions')
@@ -128,11 +167,58 @@ class PontoonResourceSubmission(models.Model):
     pushed_at = models.DateTimeField(null=True)
     pushed_commit_sha = models.CharField(max_length=40, blank=True)
 
+    objects = PontoonResourceSubmissionQuerySet.as_manager()
+
+    def get_translation_progress(self, language):
+        """
+        Get the current translation progress into the specified language.
+
+        Returns two integers:
+        - The total number of segments in the submission to translate
+        - The number of segments that have been translated into the target language
+        """
+        return get_translation_progress(self.revision_id, language)
+
+    @transaction.atomic
+    def create_or_update_translated_page(self, language):
+        """
+        Creates/updates the translated page to reflect the translations in translation memory.
+
+        Note, all strings in the submission must be translated into the target language!
+        """
+        revision, created = create_or_update_translated_page(self.revision, language)
+
+        PontoonResourceTranslation.objects.create(
+            submission=self,
+            language=language,
+            revision=revision,
+        )
+
+        return revision, created
+
+
+class PontoonResourceTranslation(models.Model):
+    """
+    Represents a translation that was sucessfully carried out by pontoon.
+    """
+    submission = models.ForeignKey(PontoonResourceSubmission, on_delete=models.CASCADE, related_name='translations')
+    language = models.ForeignKey('wagtail_localize.Language', on_delete=models.CASCADE, related_name='pontoon_translations')
+
+    # The revision of the page that was created when the translations were saved
+    revision = models.OneToOneField('wagtailcore.PageRevision', on_delete=models.CASCADE, related_name='pontoon_translation')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [
+            ('submission', 'language'),
+        ]
+
 
 @transaction.atomic
 def submit_to_pontoon(page, revision):
     # Extract segments from page and save them to translation memory
-    insert_segments(revision, page.locale_id, extract_segments(page))
+    insert_segments(revision, page.locale.language_id, extract_segments(page))
 
     # Get/create resource
     try:

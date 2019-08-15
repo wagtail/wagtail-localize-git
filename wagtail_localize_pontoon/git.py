@@ -4,6 +4,8 @@ from contextlib import contextmanager
 import pygit2
 import toml
 
+from django.conf import settings
+
 
 class Repository:
     def __init__(self, repo):
@@ -16,18 +18,18 @@ class Repository:
 
     @classmethod
     def open(cls):
-        REMOTE_URL = 'git@github.com:kaedroho/pontoon-test.git'
-        LOCAL_DIR = '/home/vagrant/pontoon-test.git'
+        git_url = settings.WAGTAILLOCALIZE_PONTOON_GIT_URL
+        git_clone_dir = settings.WAGTAILLOCALIZE_PONTOON_GIT_CLONE_DIR
 
-        if not os.path.isdir(LOCAL_DIR):
+        if not os.path.isdir(git_clone_dir):
             print("Cloning repo from git...")
 
             pygit2.clone_repository(
-                REMOTE_URL, LOCAL_DIR, bare=True,
-                callbacks=self.get_remote_callbacks(),
+                git_url, git_clone_dir, bare=True,
+                callbacks=cls.get_remote_callbacks(),
             )
 
-        return cls(pygit2.Repository(LOCAL_DIR))
+        return cls(pygit2.Repository(git_clone_dir))
 
     def reader(self):
         return RepositoryReader(self.repo)
@@ -40,7 +42,7 @@ class Repository:
         new_head = self.repo.lookup_reference('refs/remotes/origin/master')
         return RepositoryMerger(self.repo, new_head)
 
-    def try_push(self):
+    def push(self):
         self.repo.remotes[0].push(['refs/heads/master'], callbacks=self.get_remote_callbacks())
 
 
