@@ -33,6 +33,10 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    install_requires=[],
+    install_requires=[
+        'polib==1.1.0',
+        'pygit2==0.28.2',
+        'toml==0.10.0',
+    ],
     zip_safe=False,
 )
