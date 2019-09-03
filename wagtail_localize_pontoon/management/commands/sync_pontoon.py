@@ -8,7 +8,7 @@ from wagtail_localize.models import Language, Locale, ParentNotTranslatedError
 from wagtail_localize.translation_memory.models import Segment
 
 from ...git import Repository
-from ...models import PontoonResourceSubmission, PontoonResource
+from ...models import PontoonResourceSubmission, PontoonResource, PontoonSyncLog
 from ...pofile import generate_source_pofile, generate_language_pofile
 
 
@@ -20,7 +20,8 @@ def try_update_resource_translation(resource, language):
         print(f"Saving translated page for '{resource.page.title}'")
 
         try:
-            revision, created = translatable_submission.create_or_update_translated_page(language)
+            with transaction.atomic():
+                revision, created = translatable_submission.create_or_update_translated_page(language)
         except ParentNotTranslatedError:
             # These pages will be handled when the parent is created in the code below
             print("Unable to save translated page as its parent must be translated first")
@@ -37,14 +38,28 @@ def try_update_resource_translation(resource, language):
 
 class Command(BaseCommand):
 
-    def handle(self, **options):
-        repo = Repository.open()
+    @transaction.atomic
+    def handle_pull(self, repo):
+        # Get the last commit ID that we either pulled or pushed
+        last_log = PontoonSyncLog.objects.order_by('-time').first()
+        last_commit_id = None
+        if last_log is not None:
+            last_commit_id = last_log.commit_id
 
-        # Pull changes from repo
-        merger = repo.pull()
+        # Create a new log for this pull
+        PontoonSyncLog.objects.create(
+            action=PontoonSyncLog.ACTION_PULL,
+            commit_id=repo.get_head_commit_id(),
+        )
 
-        for filename, old_content, new_content in merger.changed_files():
-            print("Ingesting changes for", filename)
+        current_commit_id = repo.get_head_commit_id()
+
+        if last_commit_id == current_commit_id:
+            print("Pull: No changes since last sync")
+            return
+
+        for filename, old_content, new_content in repo.get_changed_files(last_commit_id, repo.get_head_commit_id()):
+            print("Push: Ingesting changes for", filename)
             resource, language = PontoonResource.get_by_po_filename(filename)
             old_po = polib.pofile(old_content.decode('utf-8'))
             new_po = polib.pofile(new_content.decode('utf-8'))
@@ -71,14 +86,13 @@ class Command(BaseCommand):
                                 # TODO: Update previously translated pages that used this string?
 
                     except Segment.objects.DoesNotExist:
-                        print("Warning: unrecognised segment")
+                        print("Pull Warning: unrecognised segment")
 
                 # Check if the translated page is ready to be created/updated
                 try_update_resource_translation(resource, language)
 
-        merger.commit()
-
-        # Push our changes
+    @transaction.atomic
+    def handle_push(self, repo):
         reader = repo.reader()
         writer = repo.writer()
         writer.copy_unmanaged_files(reader)
@@ -100,26 +114,44 @@ class Command(BaseCommand):
 
         languages = Language.objects.filter(is_active=True).exclude(id=Language.objects.default_id())
 
-        with transaction.atomic():
-            paths = []
-            pushed_submission_ids = []
-            for submission in PontoonResourceSubmission.objects.filter(revision_id=F('resource__current_revision_id')).select_related('resource').order_by('resource__path'):
-                source_po = generate_source_pofile(submission.resource)
-                update_po(str(submission.resource.get_po_filename()), source_po)
+        paths = []
+        pushed_submission_ids = []
+        for submission in PontoonResourceSubmission.objects.filter(revision_id=F('resource__current_revision_id')).select_related('resource').order_by('resource__path'):
+            source_po = generate_source_pofile(submission.resource)
+            update_po(str(submission.resource.get_po_filename()), source_po)
 
-                for language in languages:
-                    locale_po = generate_language_pofile(submission.resource, language)
-                    update_po(str(submission.resource.get_po_filename(language=language)), locale_po)
+            for language in languages:
+                locale_po = generate_language_pofile(submission.resource, language)
+                update_po(str(submission.resource.get_po_filename(language=language)), locale_po)
 
-                paths.append((submission.resource.get_po_filename(), submission.resource.get_locale_po_filename_template()))
+            paths.append((submission.resource.get_po_filename(), submission.resource.get_locale_po_filename_template()))
 
-                pushed_submission_ids.append(submission.id)
+            pushed_submission_ids.append(submission.id)
 
-            PontoonResourceSubmission.objects.filter(id__in=pushed_submission_ids).update(pushed_at=timezone.now())
+        writer.write_config([language.as_rfc5646_language_tag() for language in languages], paths)
 
-            writer.write_config([language.as_rfc5646_language_tag() for language in languages], paths)
+        if writer.has_changes():
+            print("Push: Committing changes")
+            writer.commit("Updates to source content")
 
-            if writer.has_changes():
-                print("Committing changes")
-                writer.commit("Updates to source content")
-                repo.push()
+            # Create a new log for this push
+            log = PontoonSyncLog.objects.create(
+                action=PontoonSyncLog.ACTION_PUSH,
+                commit_id=repo.get_head_commit_id(),
+            )
+
+            PontoonResourceSubmission.objects.filter(id__in=pushed_submission_ids).update(pushed_at=timezone.now(), push_log=log)
+
+            repo.push()
+        else:
+            print("Push: No changes since last sync")
+
+    def handle(self, **options):
+        repo = Repository.open()
+
+        # Pull changes from repo
+        repo.pull()
+        self.handle_pull(repo)
+
+        # Push our changes
+        self.handle_push(repo)

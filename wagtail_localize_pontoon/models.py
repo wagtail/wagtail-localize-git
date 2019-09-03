@@ -14,6 +14,20 @@ from wagtail_localize.translation_memory.utils import insert_segments, get_trans
 from .page_updater import create_or_update_translated_page
 
 
+class PontoonSyncLog(models.Model):
+    ACTION_PUSH = 1
+    ACTION_PULL = 2
+
+    ACTION_CHOICES = [
+        (ACTION_PUSH, "Push"),
+        (ACTION_PULL, "Pull"),
+    ]
+
+    action = models.PositiveIntegerField(choices=ACTION_CHOICES)
+    time = models.DateTimeField(auto_now_add=True)
+    commit_id = models.CharField(max_length=40)
+
+
 class PontoonResource(models.Model):
     page = models.OneToOneField('wagtailcore.Page', on_delete=models.CASCADE, primary_key=True, related_name='+')
 
@@ -165,7 +179,7 @@ class PontoonResourceSubmission(models.Model):
     #created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
 
     pushed_at = models.DateTimeField(null=True)
-    pushed_commit_sha = models.CharField(max_length=40, blank=True)
+    push_log = models.ForeignKey(PontoonSyncLog, null=True, on_delete=models.SET_NULL, related_name='pushed_submissions')
 
     objects = PontoonResourceSubmissionQuerySet.as_manager()
 

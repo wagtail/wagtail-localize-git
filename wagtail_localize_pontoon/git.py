@@ -40,27 +40,31 @@ class Repository:
     def pull(self):
         self.repo.remotes[0].fetch(callbacks=self.get_remote_callbacks())
         new_head = self.repo.lookup_reference('refs/remotes/origin/master')
-        return RepositoryMerger(self.repo, new_head)
+        self.repo.head.set_target(new_head.target)
 
     def push(self):
         self.repo.remotes[0].push(['refs/heads/master'], callbacks=self.get_remote_callbacks())
 
-
-class RepositoryMerger:
-    def __init__(self, repo, new_head):
-        self.repo = repo
-        self.new_head = new_head
-
-    def changed_files(self):
+    def get_changed_files(self, old_commit, new_commit):
         """
         For each file that has changed, yields a three-tuple containing the filename, old content and new content
         """
+        print(old_commit, new_commit)
+        if old_commit is not None and  not self.repo.descendant_of(new_commit, old_commit):
+            raise ValueError("Second commit must be a descendant of first commit")
+
         old_index = pygit2.Index()
         new_index = pygit2.Index()
-        old_index.read_tree(self.repo.get(self.repo.head.target).tree)
-        new_index.read_tree(self.repo.get(self.new_head.target).tree)
+        if old_commit is not None:
+            old_tree = self.repo.get(old_commit).tree
+            old_index.read_tree(old_tree)
+        else:
+            old_tree = self.repo.get('4b825dc642cb6eb9a060e54bf8d69288fbee4904')
 
-        for patch in self.repo.diff(self.repo.head, self.new_head):
+        new_tree = self.repo.get(new_commit).tree
+        new_index.read_tree(new_tree)
+
+        for patch in self.repo.diff(old_tree, new_tree):
             if patch.delta.status_char() != 'M':
                 continue
 
@@ -73,11 +77,8 @@ class RepositoryMerger:
             new_file = self.repo.get(new_file_oid)
             yield patch.delta.new_file.path, old_file.data, new_file.data
 
-    def commit(self):
-        """
-        Updates the local master branch to match the remote
-        """
-        self.repo.head.set_target(self.new_head.target)
+    def get_head_commit_id(self):
+        return self.repo.head.target.hex
 
 
 class RepositoryReader:
