@@ -61,6 +61,12 @@ class RepositoryMerger:
         new_index.read_tree(self.repo.get(self.new_head.target).tree)
 
         for patch in self.repo.diff(self.repo.head, self.new_head):
+            if patch.delta.status_char() != 'M':
+                continue
+
+            if not path.delta.new_file.path.startswith('locales/'):
+                continue
+
             old_file_oid = old_index[patch.delta.old_file.path].oid
             new_file_oid = new_index[patch.delta.new_file.path].oid
             old_file = self.repo.get(old_file_oid)
@@ -117,6 +123,18 @@ class RepositoryWriter:
                 for source_path, locale_path in paths
             ]
         }))
+
+    def copy_unmanaged_files(self, reader):
+        """
+        Copies any files we don't manage from the specified reader.
+
+        This is everything excluding l10n.toml, templates and locales.
+        """
+        for entry in reader.index:
+            if entry.path == 'l10n.toml' or entry.path.startswith('templates/') or entry.path.startswith('locales/'):
+                continue
+
+            self.index.add(entry)
 
     def commit(self, message):
         """

@@ -81,6 +81,7 @@ class Command(BaseCommand):
         # Push our changes
         reader = repo.reader()
         writer = repo.writer()
+        writer.copy_unmanaged_files(reader)
 
         def update_po(filename, new_po_string):
             try:
