@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models, transaction
 from django.db.models import Exists, OuterRef
 from django.dispatch import receiver
+from django.utils import timezone
 
 from wagtail.core.signals import page_published
 from wagtail_localize.models import TranslatablePageMixin, Locale, Language
@@ -25,7 +26,7 @@ class PontoonSyncLog(models.Model):
 
     action = models.PositiveIntegerField(choices=ACTION_CHOICES)
     time = models.DateTimeField(auto_now_add=True)
-    commit_id = models.CharField(max_length=40)
+    commit_id = models.CharField(max_length=40, blank=True)
 
 
 class PontoonResource(models.Model):
@@ -154,8 +155,22 @@ class PontoonResource(models.Model):
             if translated_segments == total_segments:
                 return submission
 
+    def latest_submission(self):
+        return self.submissions.latest('created_at')
+
+    def latest_pushed_submission(self):
+        return self.submissions.filter(pushed_at__isnull=False).latest('created_at')
+
     def __repr__(self):
         return f"<PontoonResource '{self.get_po_filename()}'>"
+
+
+class PontoonSyncLogResource(models.Model):
+    log = models.ForeignKey(PontoonSyncLog, on_delete=models.CASCADE, related_name='resources')
+    resource = models.ForeignKey(PontoonResource, on_delete=models.CASCADE, related_name='logs')
+
+    # Null if pushing this resource, otherwise set to the language being pulled
+    language = models.ForeignKey('wagtail_localize.Language', null=True, on_delete=models.CASCADE, related_name='+')
 
 
 class PontoonResourceSubmissionQuerySet(models.QuerySet):

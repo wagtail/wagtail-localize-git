@@ -22,8 +22,6 @@ class Repository:
         git_clone_dir = settings.WAGTAILLOCALIZE_PONTOON_GIT_CLONE_DIR
 
         if not os.path.isdir(git_clone_dir):
-            print("Cloning repo from git...")
-
             pygit2.clone_repository(
                 git_url, git_clone_dir, bare=True,
                 callbacks=cls.get_remote_callbacks(),
@@ -49,7 +47,6 @@ class Repository:
         """
         For each file that has changed, yields a three-tuple containing the filename, old content and new content
         """
-        print(old_commit, new_commit)
         if old_commit is not None and  not self.repo.descendant_of(new_commit, old_commit):
             raise ValueError("Second commit must be a descendant of first commit")
 
@@ -68,7 +65,7 @@ class Repository:
             if patch.delta.status_char() != 'M':
                 continue
 
-            if not path.delta.new_file.path.startswith('locales/'):
+            if not patch.delta.new_file.path.startswith('locales/'):
                 continue
 
             old_file_oid = old_index[patch.delta.old_file.path].oid
