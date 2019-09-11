@@ -8,7 +8,8 @@
     <div class="nice-padding">
         {% if sync_running %}
             Synchronising with Pontoon now!
-
+        {% elif sync_queued %}
+            Synchronisation with Pontoon queued
         {% else %}
             <form method="post" action="{% url 'wagtail_localize_pontoon:force_sync' %}">
                 {% csrf_token %}
