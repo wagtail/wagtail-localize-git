@@ -7,6 +7,10 @@ from wagtail_localize.segments.ingest import ingest_segments
 from wagtail_localize.translation_memory.models import SegmentPageLocation, TemplatePageLocation
 
 
+def copy_page_content(from_page, to_page, update_attrs=None, process_child_object=None, exclude_fields=None):
+    return to_page.with_content_json(from_page.to_json())
+
+
 def create_or_update_translated_page(revision, language):
     locale = Locale.objects.get(region_id=Region.objects.default_id(), language=language)
 
@@ -15,6 +19,7 @@ def create_or_update_translated_page(revision, language):
     try:
         translated_page = page.get_translation(locale)
         created = False
+        recopy_page(page, translated_page)
     except page.specific_class.DoesNotExist:
         # May raise ParentNotTranslatedError
         translated_page = page.copy_for_translation(locale)

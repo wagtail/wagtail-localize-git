@@ -165,12 +165,22 @@ class PontoonResource(models.Model):
         return f"<PontoonResource '{self.get_po_filename()}'>"
 
 
+class PontoonSyncLogResourceQuerySet(models.QuerySet):
+    def unique_resources(self):
+        return PontoonResource.objects.filter(page_id__in=self.values_list('resource_id', flat=True))
+
+    def unique_languages(self):
+        return Language.objects.filter(id__in=self.values_list('language_id', flat=True))
+
+
 class PontoonSyncLogResource(models.Model):
     log = models.ForeignKey(PontoonSyncLog, on_delete=models.CASCADE, related_name='resources')
     resource = models.ForeignKey(PontoonResource, on_delete=models.CASCADE, related_name='logs')
 
     # Null if pushing this resource, otherwise set to the language being pulled
     language = models.ForeignKey('wagtail_localize.Language', null=True, on_delete=models.CASCADE, related_name='+')
+
+    objects = PontoonSyncLogResourceQuerySet.as_manager()
 
 
 class PontoonResourceSubmissionQuerySet(models.QuerySet):

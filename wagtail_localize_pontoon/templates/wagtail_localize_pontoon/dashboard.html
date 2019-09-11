@@ -17,10 +17,10 @@
         {% endif %}
 
         <h3>Resources</h3>
-        <table>
+        <table style="width: 100%;">
             <thead>
-                <th>Name</th>
-                <th>Page</th>
+                <th>Filename</th>
+                <th>Source Page</th>
                 <th>Last updated</th>
                 <th>Last pushed</th>
                 <th>Requires sync</th>
@@ -29,8 +29,8 @@
                 {% for resource in resources %}
                 {% with resource.latest_submission as latest_submission %}
                     <tr>
-                        <td>{{ resource.path }}</td>
-                        <td>{{ resource.page.get_admin_display_title }}</td>
+                        <td>{{ resource.path }}.pot</td>
+                        <td><a href="{% url 'wagtailadmin_pages:edit' resource.page_id %}">{{ resource.page.get_admin_display_title }}</a></td>
                         <td>{{ resource.latest_submission.created_at }}</td>
                         <td>{{ resource.latest_pushed_submission.pushed_at }}</td>
                         <td>
@@ -49,22 +49,19 @@
         <h3>Log</h3>
         <ul>
             {% for log in logs %}
-                <li>
-                    {{ log.time }}
+                {% if log.resources.exists %}
+                    <li>
+                        {{ log.time }}
 
-                    {% if log.action == log.ACTION_PUSH %}
-                        Pushed
-                        {% for resource in log.resources.all %}
-                            {{ resource.resource.page.get_admin_display_title }}{% if not forloop.last %},{% endif %}
-                        {% endfor %}
-
-                    {% elif log.action == log.ACTION_PULL %}
-                        Pulled
-                        {% for resource in log.resources.all %}
-                            {{ resource.resource.page.get_admin_display_title }} ({{ resource.language.get_display_name }}){% if not forloop.last %},{% endif %}
-                        {% endfor %}
-                    {% endif %}
-                </li>
+                        {% if log.action == log.ACTION_PUSH %}
+                            Pushed {{ log.resources.unique_resources.count }} resources
+                        {% elif log.action == log.ACTION_PULL %}
+                            Pulled
+                            {{ log.resources.unique_resources.count }} resources
+                            in {{ log.resources.unique_languages.count }} languages
+                        {% endif %}
+                    </li>
+                {% endif %}
             {% endfor %}
         </ul>
     </div>
