@@ -1,10 +1,11 @@
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
+from django.utils.module_loading import import_string
 import polib
-from redlock import RedLock, RedLockError
 
 from wagtail_localize.models import Language, ParentNotTranslatedError
 from wagtail_localize.translation_memory.models import Segment
@@ -174,22 +175,42 @@ def _push(repo):
         logger.info("Push: No changes since last sync")
 
 
-def sync_running():
-    """
-    Returns True if the sync task is currently running
-    """
-    return RedLock("wagtail_localize_pontoon.sync").locked()
+class SyncManager:
+    def __init__(self):
+        self.logger = logger
+
+    def sync(self):
+        self.logger.info("Pulling repository")
+        repo = Repository.open()
+        repo.pull()
+
+        _pull(repo)
+        _push(repo)
+
+        self.logger.info("Finished")
+
+    def trigger(self):
+        """
+        Called when user presses the "Sync" button in the admin
+
+        This should enqueue a background task to run the sync() function
+        """
+        self.sync()
+
+    def is_queued(self):
+        """
+        Returns True if the background task is queued
+        """
+        return False
+
+    def is_running(self):
+        """
+        Returns True if the background task is currently running
+        """
+        return False
 
 
-def sync():
-    try:
-        with RedLock("wagtail_localize_pontoon.sync"):
-            logger.info("Pulling repository")
-            repo = Repository.open()
-            repo.pull()
-
-            _pull(repo)
-            _push(repo)
-
-    except RedLockError:
-        logger.warning("Failed to aquire lock. The task is probably already running.")
+def get_sync_manager():
+    sync_manager_class_path = getattr(settings, 'WAGTAILLOCALIZE_PONTOON_SYNC_MANAGER_CLASS', 'wagtail_localize_pontoon.sync.SyncManager')
+    sync_manager = import_string(sync_manager_class_path)
+    return sync_manager()

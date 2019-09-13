@@ -1,29 +1,22 @@
-from rq import Queue
-from worker import conn
-
 from django.shortcuts import render, redirect
 
-from worker import conn
 from .models import PontoonSyncLog, PontoonResource
-from .sync import sync, sync_running
-
-
-queue = Queue('wagtail_localize_pontoon.sync', connection=conn)
+from .sync import get_sync_manager
 
 
 def dashboard(request):
+    sync_manager = get_sync_manager()
     return render(request, 'wagtail_localize_pontoon/dashboard.html', {
         'resources': PontoonResource.objects.all(),
         'logs': PontoonSyncLog.objects.order_by('-time'),
-        'sync_running': sync_running(),
-        'sync_queued': bool(queue.get_jobs())
+        'sync_running': sync_manager.is_running(),
+        'sync_queued': sync_manager.is_queued(),
     })
 
 
 def force_sync(request):
-    if not sync_running():
-        # Make sure there is only one job in the queue at a time
-        queue.delete()
-        queue.enqueue(sync)
+    sync_manager = get_sync_manager()
+    if not sync_manager.is_queued():
+        sync_manager.trigger()
 
     return redirect('wagtail_localize_pontoon:dashboard')
