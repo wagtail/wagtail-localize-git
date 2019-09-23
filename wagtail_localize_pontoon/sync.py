@@ -15,9 +15,6 @@ from .models import PontoonResourceSubmission, PontoonResource, PontoonSyncLog, 
 from .pofile import generate_source_pofile, generate_language_pofile
 
 
-logger = logging.getLogger(__name__)
-
-
 def _try_update_resource_translation(resource, language):
     # Check if there is a submission ready to be translated
     translatable_submission = resource.find_translatable_submission(language)
@@ -42,7 +39,7 @@ def _try_update_resource_translation(resource, language):
 
 
 @transaction.atomic
-def _pull(repo):
+def _pull(repo, logger):
     # Get the last commit ID that we either pulled or pushed
     last_log = PontoonSyncLog.objects.order_by('-time').exclude(commit_id='').first()
     last_commit_id = None
@@ -104,7 +101,7 @@ def _pull(repo):
 
 
 @transaction.atomic
-def _push(repo):
+def _push(repo, logger):
     reader = repo.reader()
     writer = repo.writer()
     writer.copy_unmanaged_files(reader)
@@ -176,16 +173,16 @@ def _push(repo):
 
 
 class SyncManager:
-    def __init__(self):
-        self.logger = logger
+    def __init__(self, logger=None):
+        self.logger = logger or logging.getLogger(__name__)
 
     def sync(self):
         self.logger.info("Pulling repository")
         repo = Repository.open()
         repo.pull()
 
-        _pull(repo)
-        _push(repo)
+        _pull(repo, self.logger)
+        _push(repo, self.logger)
 
         self.logger.info("Finished")
 
