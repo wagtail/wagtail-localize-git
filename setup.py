@@ -21,6 +21,7 @@ setup(
     author_email='karl@torchbox.com',
     url='',
     packages=find_packages(),
+    include_package_data=True,
     license='BSD',
     classifiers=[
         'Development Status :: 3 - Alpha',
