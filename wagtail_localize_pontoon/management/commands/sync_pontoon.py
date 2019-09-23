@@ -2,12 +2,14 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from ...sync import sync, logger
+from ...sync import SyncManager
 
 
 class Command(BaseCommand):
 
     def handle(self, **options):
+        logger = logging.getLogger(__name__)
+
         # Enable logging to console
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
@@ -15,4 +17,4 @@ class Command(BaseCommand):
         logger.addHandler(console)
         logger.setLevel(logging.INFO)
 
-        sync()
+        SyncManager(logger=logger).sync()
