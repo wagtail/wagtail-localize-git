@@ -1,4 +1,5 @@
 import os.path
+import tempfile
 from contextlib import contextmanager
 
 import pygit2
@@ -7,14 +8,24 @@ import toml
 from django.conf import settings
 
 
+@contextmanager
+def get_keypair():
+    username = 'git'
+    git_pubkey = settings.WAGTAILLOCALIZE_PONTOON_GIT_SSH_PUBLIC_KEY
+    git_privkey = settings.WAGTAILLOCALIZE_PONTOON_GIT_SSH_PRIVATE_KEY
+
+    with tempfile.NamedTemporaryFile() as pubkey_file, tempfile.NamedTemporaryFile() as privkey_file:
+        pubkey_file.write(git_pubkey)
+        pubkey_file.flush()
+        privkey_file.write(git_privkey)
+        privkey_file.flush()
+
+        yield pygit2.Keypair(username, pubkey_file.name, privkey_file.name, '')
+
+
 class Repository:
     def __init__(self, repo):
         self.repo = repo
-
-    @classmethod
-    def get_remote_callbacks(cls):
-        keypair = pygit2.KeypairFromAgent("git")
-        return pygit2.RemoteCallbacks(credentials=keypair)
 
     @classmethod
     def open(cls):
@@ -22,10 +33,11 @@ class Repository:
         git_clone_dir = settings.WAGTAILLOCALIZE_PONTOON_GIT_CLONE_DIR
 
         if not os.path.isdir(git_clone_dir):
-            pygit2.clone_repository(
-                git_url, git_clone_dir, bare=True,
-                callbacks=cls.get_remote_callbacks(),
-            )
+            with get_keypair() as keypair:
+                pygit2.clone_repository(
+                    git_url, git_clone_dir, bare=True,
+                    callbacks=pygit2.RemoteCallbacks(credentials=keypair)
+                )
 
         return cls(pygit2.Repository(git_clone_dir))
 
@@ -36,12 +48,14 @@ class Repository:
         return RepositoryWriter(self.repo)
 
     def pull(self):
-        self.repo.remotes[0].fetch(callbacks=self.get_remote_callbacks())
+        with get_keypair() as keypair:
+            self.repo.remotes[0].fetch(callbacks=pygit2.RemoteCallbacks(credentials=keypair))
         new_head = self.repo.lookup_reference('refs/remotes/origin/master')
         self.repo.head.set_target(new_head.target)
 
     def push(self):
-        self.repo.remotes[0].push(['refs/heads/master'], callbacks=self.get_remote_callbacks())
+        with get_keypair() as keypair:
+            self.repo.remotes[0].push(['refs/heads/master'], callbacks=pygit2.RemoteCallbacks(credentials=keypair))
 
     def get_changed_files(self, old_commit, new_commit):
         """
