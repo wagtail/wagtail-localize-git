@@ -17,7 +17,7 @@ def gitpython_env():
         privkey_file.write(git_privkey)
         privkey_file.flush()
 
-        with Git().custom_environment(GIT_SSH_COMMAND=f'ssh -i {privkey_file.name}'):
+        with Git().custom_environment(GIT_SSH_COMMAND=f'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {privkey_file.name}'):
             yield
 
 
