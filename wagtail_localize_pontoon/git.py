@@ -53,7 +53,7 @@ class Repository:
     def pull(self):
         with gitpython_env() as env:
             with self.gitpython.git.custom_environment(**env):
-                self.gitpython.remotes.origin.fetch()
+                self.gitpython.remotes.origin.fetch('+refs/heads/*:refs/remotes/origin/*')
 
         new_head = self.pygit.lookup_reference('refs/remotes/origin/master')
         self.pygit.head.set_target(new_head.target)
