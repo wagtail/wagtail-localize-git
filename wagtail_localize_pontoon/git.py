@@ -36,7 +36,8 @@ class Repository:
             with gitpython_env():
                 Repo.clone_from(
                     git_url,
-                    git_clone_dir
+                    git_clone_dir,
+                    bare=True
                 )
 
         return cls(pygit2.Repository(git_clone_dir), Repo(git_clone_dir))
