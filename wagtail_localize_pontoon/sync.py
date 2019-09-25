@@ -15,7 +15,7 @@ from .models import PontoonResourceSubmission, PontoonResource, PontoonSyncLog, 
 from .pofile import generate_source_pofile, generate_language_pofile
 
 
-def _try_update_resource_translation(resource, language):
+def _try_update_resource_translation(resource, language, logger):
     # Check if there is a submission ready to be translated
     translatable_submission = resource.find_translatable_submission(language)
 
@@ -35,7 +35,7 @@ def _try_update_resource_translation(resource, language):
             )
 
             for resource in child_page_resources:
-                _try_update_resource_translation(resource, language)
+                _try_update_resource_translation(resource, language, logger)
 
 
 @transaction.atomic
@@ -73,9 +73,12 @@ def _pull(repo, logger):
         new_po = polib.pofile(new_content.decode('utf-8'))
 
         with transaction.atomic():
+            # TODO: Different source languages?
+            source_language = Language.objects.default()
+
             for changed_entry in set(new_po) - set(old_po):
                 try:
-                    segment = Segment.objects.get(text=changed_entry.msgid)
+                    segment = Segment.objects.get(language=source_language, text=changed_entry.msgid)
                     translation, created = segment.translations.get_or_create(
                         language=language,
                         defaults={
@@ -93,11 +96,11 @@ def _pull(repo, logger):
 
                             # TODO: Update previously translated pages that used this string?
 
-                except Segment.objects.DoesNotExist:
+                except Segment.DoesNotExist:
                     logger.warning(f"Unrecognised segment '{changed_entry.msgid}'")
 
             # Check if the translated page is ready to be created/updated
-            _try_update_resource_translation(resource, language)
+            _try_update_resource_translation(resource, language, logger)
 
 
 @transaction.atomic
