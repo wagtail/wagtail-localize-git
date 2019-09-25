@@ -4,78 +4,79 @@ from contextlib import contextmanager
 
 import pygit2
 import toml
+from git import Git, Repo
 
 from django.conf import settings
 
 
 @contextmanager
-def get_keypair():
-    username = 'git'
-    git_pubkey = settings.WAGTAILLOCALIZE_PONTOON_GIT_SSH_PUBLIC_KEY
+def gitpython_env():
     git_privkey = settings.WAGTAILLOCALIZE_PONTOON_GIT_SSH_PRIVATE_KEY
 
-    with tempfile.NamedTemporaryFile() as pubkey_file, tempfile.NamedTemporaryFile() as privkey_file:
-        pubkey_file.write(git_pubkey)
-        pubkey_file.flush()
+    with tempfile.NamedTemporaryFile() as privkey_file:
         privkey_file.write(git_privkey)
         privkey_file.flush()
 
-        yield pygit2.Keypair(username, pubkey_file.name, privkey_file.name, '')
+        with Git().custom_environment(GIT_SSH_COMMAND=f'ssh -i {privkey_file.name}'):
+            yield
 
 
 class Repository:
-    def __init__(self, repo):
-        self.repo = repo
+    def __init__(self, pygit, gitpython):
+        self.pygit = pygit
+        self.gitpython = gitpython
 
     @classmethod
     def open(cls):
-        git_url = settings.WAGTAILLOCALIZE_PONTOON_GIT_URL
         git_clone_dir = settings.WAGTAILLOCALIZE_PONTOON_GIT_CLONE_DIR
 
         if not os.path.isdir(git_clone_dir):
-            with get_keypair() as keypair:
-                pygit2.clone_repository(
-                    git_url, git_clone_dir, bare=True,
-                    callbacks=pygit2.RemoteCallbacks(credentials=keypair)
+            git_url = settings.WAGTAILLOCALIZE_PONTOON_GIT_URL
+
+            with gitpython_env():
+                Repo.clone_from(
+                    git_url,
+                    git_clone_dir
                 )
 
-        return cls(pygit2.Repository(git_clone_dir))
+        return cls(pygit2.Repository(git_clone_dir), Repo(git_clone_dir))
 
     def reader(self):
-        return RepositoryReader(self.repo)
+        return RepositoryReader(self.pygit)
 
     def writer(self):
-        return RepositoryWriter(self.repo)
+        return RepositoryWriter(self.pygit)
 
     def pull(self):
-        with get_keypair() as keypair:
-            self.repo.remotes[0].fetch(callbacks=pygit2.RemoteCallbacks(credentials=keypair))
-        new_head = self.repo.lookup_reference('refs/remotes/origin/master')
-        self.repo.head.set_target(new_head.target)
+        with gitpython_env():
+            self.gitpython.remotes.origin.fetch()
+
+        new_head = self.pygit.lookup_reference('refs/remotes/origin/master')
+        self.pygit.head.set_target(new_head.target)
 
     def push(self):
-        with get_keypair() as keypair:
-            self.repo.remotes[0].push(['refs/heads/master'], callbacks=pygit2.RemoteCallbacks(credentials=keypair))
+        with gitpython_env():
+            self.gitpython.remotes.origin.push(['refs/heads/master'])
 
     def get_changed_files(self, old_commit, new_commit):
         """
         For each file that has changed, yields a three-tuple containing the filename, old content and new content
         """
-        if old_commit is not None and  not self.repo.descendant_of(new_commit, old_commit):
+        if old_commit is not None and  not self.pygit.descendant_of(new_commit, old_commit):
             raise ValueError("Second commit must be a descendant of first commit")
 
         old_index = pygit2.Index()
         new_index = pygit2.Index()
         if old_commit is not None:
-            old_tree = self.repo.get(old_commit).tree
+            old_tree = self.pygit.get(old_commit).tree
             old_index.read_tree(old_tree)
         else:
-            old_tree = self.repo.get('4b825dc642cb6eb9a060e54bf8d69288fbee4904')
+            old_tree = self.pygit.get('4b825dc642cb6eb9a060e54bf8d69288fbee4904')
 
-        new_tree = self.repo.get(new_commit).tree
+        new_tree = self.pygit.get(new_commit).tree
         new_index.read_tree(new_tree)
 
-        for patch in self.repo.diff(old_tree, new_tree):
+        for patch in self.pygit.diff(old_tree, new_tree):
             if patch.delta.status_char() != 'M':
                 continue
 
@@ -84,12 +85,12 @@ class Repository:
 
             old_file_oid = old_index[patch.delta.old_file.path].oid
             new_file_oid = new_index[patch.delta.new_file.path].oid
-            old_file = self.repo.get(old_file_oid)
-            new_file = self.repo.get(new_file_oid)
+            old_file = self.pygit.get(old_file_oid)
+            new_file = self.pygit.get(new_file_oid)
             yield patch.delta.new_file.path, old_file.data, new_file.data
 
     def get_head_commit_id(self):
-        return self.repo.head.target.hex
+        return self.pygit.head.target.hex
 
 
 class RepositoryReader:

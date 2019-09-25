@@ -37,6 +37,7 @@ setup(
     install_requires=[
         'polib==1.1.0',
         'pygit2==0.28.2',
+        'gitpython==3.0.2',
         'toml==0.10.0',
     ],
     zip_safe=False,
