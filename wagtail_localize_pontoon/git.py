@@ -1,25 +1,10 @@
 import os.path
-import tempfile
-from contextlib import contextmanager
 
 import pygit2
 import toml
 from git import Git, Repo
 
 from django.conf import settings
-
-
-@contextmanager
-def gitpython_env():
-    git_privkey = settings.WAGTAILLOCALIZE_PONTOON_GIT_SSH_PRIVATE_KEY
-
-    with tempfile.NamedTemporaryFile() as privkey_file:
-        privkey_file.write(git_privkey)
-        privkey_file.flush()
-
-        yield {
-            'GIT_SSH_COMMAND': f'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {privkey_file.name}',
-        }
 
 
 class Repository:
@@ -33,14 +18,11 @@ class Repository:
 
         if not os.path.isdir(git_clone_dir):
             git_url = settings.WAGTAILLOCALIZE_PONTOON_GIT_URL
-
-            with gitpython_env() as env:
-                Repo.clone_from(
-                    git_url,
-                    git_clone_dir,
-                    bare=True,
-                    env=env,
-                )
+            Repo.clone_from(
+                git_url,
+                git_clone_dir,
+                bare=True,
+            )
 
         return cls(pygit2.Repository(git_clone_dir), Repo(git_clone_dir))
 
@@ -51,17 +33,12 @@ class Repository:
         return RepositoryWriter(self.pygit)
 
     def pull(self):
-        with gitpython_env() as env:
-            with self.gitpython.git.custom_environment(**env):
-                self.gitpython.remotes.origin.fetch('+refs/heads/*:refs/remotes/origin/*')
-
+        self.gitpython.remotes.origin.fetch('+refs/heads/*:refs/remotes/origin/*')
         new_head = self.pygit.lookup_reference('refs/remotes/origin/master')
         self.pygit.head.set_target(new_head.target)
 
     def push(self):
-        with gitpython_env() as env:
-            with self.gitpython.git.custom_environment(**env):
-                self.gitpython.remotes.origin.push(['refs/heads/master'])
+        self.gitpython.remotes.origin.push(['refs/heads/master'])
 
     def get_changed_files(self, old_commit, new_commit):
         """
