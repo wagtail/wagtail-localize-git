@@ -17,8 +17,9 @@ def gitpython_env():
         privkey_file.write(git_privkey)
         privkey_file.flush()
 
-        with Git().custom_environment(GIT_SSH_COMMAND=f'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {privkey_file.name}'):
-            yield
+        yield {
+            'GIT_SSH_COMMAND': f'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {privkey_file.name}',
+        }
 
 
 class Repository:
@@ -33,11 +34,12 @@ class Repository:
         if not os.path.isdir(git_clone_dir):
             git_url = settings.WAGTAILLOCALIZE_PONTOON_GIT_URL
 
-            with gitpython_env():
+            with gitpython_env() as env:
                 Repo.clone_from(
                     git_url,
                     git_clone_dir,
-                    bare=True
+                    bare=True,
+                    env=env,
                 )
 
         return cls(pygit2.Repository(git_clone_dir), Repo(git_clone_dir))
@@ -49,15 +51,17 @@ class Repository:
         return RepositoryWriter(self.pygit)
 
     def pull(self):
-        with gitpython_env():
-            self.gitpython.remotes.origin.fetch()
+        with gitpython_env() as env:
+            with self.gitpython.git.custom_environment(**env):
+                self.gitpython.remotes.origin.fetch()
 
         new_head = self.pygit.lookup_reference('refs/remotes/origin/master')
         self.pygit.head.set_target(new_head.target)
 
     def push(self):
-        with gitpython_env():
-            self.gitpython.remotes.origin.push(['refs/heads/master'])
+        with gitpython_env() as env:
+            with self.gitpython.git.custom_environment(**env):
+                self.gitpython.remotes.origin.push(['refs/heads/master'])
 
     def get_changed_files(self, old_commit, new_commit):
         """
