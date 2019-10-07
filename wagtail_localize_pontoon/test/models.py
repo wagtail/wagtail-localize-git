@@ -10,6 +10,6 @@ class TestPage(TranslatablePageMixin, Page):
     test_synchronized_field = models.TextField(blank=True)
 
     translatable_fields = [
-        TranslatableField('test_translatable_field'),
-        SynchronizedField('test_synchronized_field'),
+        TranslatableField("test_translatable_field"),
+        SynchronizedField("test_synchronized_field"),
     ]

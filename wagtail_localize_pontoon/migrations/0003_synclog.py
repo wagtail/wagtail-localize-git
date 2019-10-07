@@ -6,27 +6,40 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('wagtail_localize_pontoon', '0002_pontoonresourcetranslation'),
-    ]
+    dependencies = [("wagtail_localize_pontoon", "0002_pontoonresourcetranslation")]
 
     operations = [
         migrations.CreateModel(
-            name='PontoonSyncLog',
+            name="PontoonSyncLog",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.PositiveIntegerField(choices=[(1, 'Push'), (2, 'Pull')])),
-                ('time', models.DateTimeField(auto_now_add=True)),
-                ('commit_id', models.CharField(max_length=40)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "action",
+                    models.PositiveIntegerField(choices=[(1, "Push"), (2, "Pull")]),
+                ),
+                ("time", models.DateTimeField(auto_now_add=True)),
+                ("commit_id", models.CharField(max_length=40)),
             ],
         ),
         migrations.RemoveField(
-            model_name='pontoonresourcesubmission',
-            name='pushed_commit_sha',
+            model_name="pontoonresourcesubmission", name="pushed_commit_sha"
         ),
         migrations.AddField(
-            model_name='pontoonresourcesubmission',
-            name='push_log',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='pushed_submissions', to='wagtail_localize_pontoon.PontoonSyncLog'),
+            model_name="pontoonresourcesubmission",
+            name="push_log",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="pushed_submissions",
+                to="wagtail_localize_pontoon.PontoonSyncLog",
+            ),
         ),
     ]

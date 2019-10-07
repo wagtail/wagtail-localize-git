@@ -8,18 +8,13 @@ def generate_source_pofile(resource):
     """
     po = polib.POFile(wrapwidth=200)
     po.metadata = {
-        'POT-Creation-Date': str(timezone.now()),
-        'MIME-Version': '1.0',
-        'Content-Type': 'text/html; charset=utf-8',
+        "POT-Creation-Date": str(timezone.now()),
+        "MIME-Version": "1.0",
+        "Content-Type": "text/html; charset=utf-8",
     }
 
     for segment in resource.get_segments().iterator():
-        po.append(
-            polib.POEntry(
-                msgid=segment.text,
-                msgstr='',
-            )
-        )
+        po.append(polib.POEntry(msgid=segment.text, msgstr=""))
 
     return str(po)
 
@@ -30,13 +25,17 @@ def generate_language_pofile(resource, language):
     """
     po = polib.POFile(wrapwidth=200)
     po.metadata = {
-        'POT-Creation-Date': str(timezone.now()),
-        'MIME-Version': '1.0',
-        'Content-Type': 'text/html; charset=utf-8',
-        'Language': language.as_rfc5646_language_tag(),
+        "POT-Creation-Date": str(timezone.now()),
+        "MIME-Version": "1.0",
+        "Content-Type": "text/html; charset=utf-8",
+        "Language": language.as_rfc5646_language_tag(),
     }
 
-    for segment in resource.get_segments(include_obsolete=True, annotate_obsolete=True).annotate_translation(language).iterator():
+    for segment in (
+        resource.get_segments(include_obsolete=True, annotate_obsolete=True)
+        .annotate_translation(language)
+        .iterator()
+    ):
         # Filter out obsolete entries that haven't been translated
         # TODO: Do this in SQL query
         if segment.is_obsolete and segment.translation is None:
@@ -45,7 +44,7 @@ def generate_language_pofile(resource, language):
         po.append(
             polib.POEntry(
                 msgid=segment.text,
-                msgstr=segment.translation or '',
+                msgstr=segment.translation or "",
                 obsolete=segment.is_obsolete,
             )
         )

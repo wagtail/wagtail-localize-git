@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('wagtail_localize_pontoon', '0004_pontoonsynclogresource'),
-    ]
+    dependencies = [("wagtail_localize_pontoon", "0004_pontoonsynclogresource")]
 
     operations = [
         migrations.AlterField(
-            model_name='pontoonsynclog',
-            name='commit_id',
+            model_name="pontoonsynclog",
+            name="commit_id",
             field=models.CharField(blank=True, max_length=40),
-        ),
+        )
     ]

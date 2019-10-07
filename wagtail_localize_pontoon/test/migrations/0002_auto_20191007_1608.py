@@ -9,28 +9,32 @@ import wagtail_localize.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wagtail_localize', '0002_initial_data'),
-        ('wagtail_localize_pontoon_test', '0001_initial'),
+        ("wagtail_localize", "0002_initial_data"),
+        ("wagtail_localize_pontoon_test", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='testpage',
-            name='is_source_translation',
+            model_name="testpage",
+            name="is_source_translation",
             field=models.BooleanField(default=True),
         ),
         migrations.AddField(
-            model_name='testpage',
-            name='locale',
-            field=models.ForeignKey(default=wagtail_localize.models.default_locale_id, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='wagtail_localize.Locale'),
+            model_name="testpage",
+            name="locale",
+            field=models.ForeignKey(
+                default=wagtail_localize.models.default_locale_id,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="+",
+                to="wagtail_localize.Locale",
+            ),
         ),
         migrations.AddField(
-            model_name='testpage',
-            name='translation_key',
+            model_name="testpage",
+            name="translation_key",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
         ),
         migrations.AlterUniqueTogether(
-            name='testpage',
-            unique_together={('translation_key', 'locale')},
+            name="testpage", unique_together={("translation_key", "locale")}
         ),
     ]

@@ -5,13 +5,10 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('wagtail_localize_pontoon', '0005_auto_20190923_1405'),
-    ]
+    dependencies = [("wagtail_localize_pontoon", "0005_auto_20190923_1405")]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='pontoonresourcetranslation',
-            unique_together=set(),
-        ),
+            name="pontoonresourcetranslation", unique_together=set()
+        )
     ]

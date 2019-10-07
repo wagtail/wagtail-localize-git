@@ -1,1 +1,1 @@
-default_app_config = 'wagtail_localize_pontoon.apps.WagtailLocalizePontoonAppConfig'
+default_app_config = "wagtail_localize_pontoon.apps.WagtailLocalizePontoonAppConfig"

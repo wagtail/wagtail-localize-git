@@ -18,11 +18,7 @@ class Repository:
 
         if not os.path.isdir(git_clone_dir):
             git_url = settings.WAGTAILLOCALIZE_PONTOON_GIT_URL
-            Repo.clone_from(
-                git_url,
-                git_clone_dir,
-                bare=True,
-            )
+            Repo.clone_from(git_url, git_clone_dir, bare=True)
 
         return cls(pygit2.Repository(git_clone_dir), Repo(git_clone_dir))
 
@@ -33,18 +29,20 @@ class Repository:
         return RepositoryWriter(self.pygit)
 
     def pull(self):
-        self.gitpython.remotes.origin.fetch('+refs/heads/*:refs/remotes/origin/*')
-        new_head = self.pygit.lookup_reference('refs/remotes/origin/master')
+        self.gitpython.remotes.origin.fetch("+refs/heads/*:refs/remotes/origin/*")
+        new_head = self.pygit.lookup_reference("refs/remotes/origin/master")
         self.pygit.head.set_target(new_head.target)
 
     def push(self):
-        self.gitpython.remotes.origin.push(['refs/heads/master'])
+        self.gitpython.remotes.origin.push(["refs/heads/master"])
 
     def get_changed_files(self, old_commit, new_commit):
         """
         For each file that has changed, yields a three-tuple containing the filename, old content and new content
         """
-        if old_commit is not None and  not self.pygit.descendant_of(new_commit, old_commit):
+        if old_commit is not None and not self.pygit.descendant_of(
+            new_commit, old_commit
+        ):
             raise ValueError("Second commit must be a descendant of first commit")
 
         old_index = pygit2.Index()
@@ -53,16 +51,16 @@ class Repository:
             old_tree = self.pygit.get(old_commit).tree
             old_index.read_tree(old_tree)
         else:
-            old_tree = self.pygit.get('4b825dc642cb6eb9a060e54bf8d69288fbee4904')
+            old_tree = self.pygit.get("4b825dc642cb6eb9a060e54bf8d69288fbee4904")
 
         new_tree = self.pygit.get(new_commit).tree
         new_index.read_tree(new_tree)
 
         for patch in self.pygit.diff(old_tree, new_tree):
-            if patch.delta.status_char() != 'M':
+            if patch.delta.status_char() != "M":
                 continue
 
-            if not patch.delta.new_file.path.startswith('locales/'):
+            if not patch.delta.new_file.path.startswith("locales/"):
                 continue
 
             old_file_oid = old_index[patch.delta.old_file.path].oid
@@ -108,16 +106,18 @@ class RepositoryWriter:
         self.index.add(pygit2.IndexEntry(filename, blob, pygit2.GIT_FILEMODE_BLOB))
 
     def write_config(self, languages, paths):
-        self.write_file('l10n.toml', toml.dumps({
-            'locales': languages,
-            'paths': [
+        self.write_file(
+            "l10n.toml",
+            toml.dumps(
                 {
-                    'reference': str(source_path),
-                    'l10n': str(locale_path),
+                    "locales": languages,
+                    "paths": [
+                        {"reference": str(source_path), "l10n": str(locale_path)}
+                        for source_path, locale_path in paths
+                    ],
                 }
-                for source_path, locale_path in paths
-            ]
-        }))
+            ),
+        )
 
     def copy_unmanaged_files(self, reader):
         """
@@ -126,7 +126,11 @@ class RepositoryWriter:
         This is everything excluding l10n.toml, templates and locales.
         """
         for entry in reader.index:
-            if entry.path == 'l10n.toml' or entry.path.startswith('templates/') or entry.path.startswith('locales/'):
+            if (
+                entry.path == "l10n.toml"
+                or entry.path.startswith("templates/")
+                or entry.path.startswith("locales/")
+            ):
                 continue
 
             self.index.add(entry)
@@ -137,5 +141,9 @@ class RepositoryWriter:
         """
         tree = self.index.write_tree(self.repo)
 
-        sig = pygit2.Signature('Wagtail Localize', 'wagtail_localize_pontoon@wagtail.io')
-        self.repo.create_commit('refs/heads/master', sig, sig, message, tree, [self.repo.head.target])
+        sig = pygit2.Signature(
+            "Wagtail Localize", "wagtail_localize_pontoon@wagtail.io"
+        )
+        self.repo.create_commit(
+            "refs/heads/master", sig, sig, message, tree, [self.repo.head.target]
+        )

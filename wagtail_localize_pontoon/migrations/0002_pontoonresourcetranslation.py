@@ -7,23 +7,50 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wagtail_localize', '0002_initial_data'),
-        ('wagtailcore', '0041_group_collection_permissions_verbose_name_plural'),
-        ('wagtail_localize_pontoon', '0001_initial'),
+        ("wagtail_localize", "0002_initial_data"),
+        ("wagtailcore", "0041_group_collection_permissions_verbose_name_plural"),
+        ("wagtail_localize_pontoon", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PontoonResourceTranslation',
+            name="PontoonResourceTranslation",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('language', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pontoon_translations', to='wagtail_localize.Language')),
-                ('revision', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='pontoon_translation', to='wagtailcore.PageRevision')),
-                ('submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='translations', to='wagtail_localize_pontoon.PontoonResourceSubmission')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "language",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="pontoon_translations",
+                        to="wagtail_localize.Language",
+                    ),
+                ),
+                (
+                    "revision",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="pontoon_translation",
+                        to="wagtailcore.PageRevision",
+                    ),
+                ),
+                (
+                    "submission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="translations",
+                        to="wagtail_localize_pontoon.PontoonResourceSubmission",
+                    ),
+                ),
             ],
-            options={
-                'unique_together': {('submission', 'language')},
-            },
-        ),
+            options={"unique_together": {("submission", "language")}},
+        )
     ]

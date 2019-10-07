@@ -7,7 +7,6 @@ from ...models import submit_to_pontoon, PontoonResourceSubmission
 
 
 class Command(BaseCommand):
-
     def handle(self, **options):
         source_locale_id = Locale.objects.default_id()
 
@@ -19,10 +18,14 @@ class Command(BaseCommand):
                 continue
 
             if page.live_revision is not None:
-                print(f"Warning: The page '{page.title}' does not have a live_revision. Using latest revision instead.")
+                print(
+                    f"Warning: The page '{page.title}' does not have a live_revision. Using latest revision instead."
+                )
                 revision = page.live_revision
             else:
-                revision = page.get_latest_revision() or page.save_revision(changed=False)
+                revision = page.get_latest_revision() or page.save_revision(
+                    changed=False
+                )
 
             print(f"Submitting '{page.title}'")
 

@@ -8,15 +8,20 @@ from wagtail.core import hooks
 from . import views
 
 
-@hooks.register('register_admin_urls')
+@hooks.register("register_admin_urls")
 def register_admin_urls():
     urls = [
-        url('^$', views.dashboard, name='dashboard'),
-        url('^force-sync/$', views.force_sync, name='force_sync'),
+        url("^$", views.dashboard, name="dashboard"),
+        url("^force-sync/$", views.force_sync, name="force_sync"),
     ]
 
     return [
-        url('^localize/pontoon/', include((urls, 'wagtail_localize_pontoon'), namespace='wagtail_localize_pontoon')),
+        url(
+            "^localize/pontoon/",
+            include(
+                (urls, "wagtail_localize_pontoon"), namespace="wagtail_localize_pontoon"
+            ),
+        )
     ]
 
 
@@ -25,7 +30,11 @@ class PontoonMenuItem(MenuItem):
         return True
 
 
-@hooks.register('register_settings_menu_item')
+@hooks.register("register_settings_menu_item")
 def register_menu_item():
-    return PontoonMenuItem(_('Pontoon'), reverse('wagtail_localize_pontoon:dashboard'),
-                         classnames='icon icon-site', order=500)
+    return PontoonMenuItem(
+        _("Pontoon"),
+        reverse("wagtail_localize_pontoon:dashboard"),
+        classnames="icon icon-site",
+        order=500,
+    )
