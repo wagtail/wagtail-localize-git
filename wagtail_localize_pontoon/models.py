@@ -138,14 +138,14 @@ class PontoonResource(models.Model):
         translated submission.
 
         A submission is considered translatable if all the strings in the submission have been translated into the
-        target language and the translated page hasn't been updated for that submission or a later one.
+        target language and the translated page hasn't been updated for a later submission.
         """
         submissions_to_check = self.submissions.order_by('-created_at')
 
         # Exclude submissions that pre-date the last translated submission
         last_translated_submission = self.submissions.annotate_translated(language).filter(is_translated=True).order_by('created_at').last()
         if last_translated_submission is not None:
-            submissions_to_check = submissions_to_check.filter(created_at__gt=last_translated_submission.created_at)
+            submissions_to_check = submissions_to_check.filter(created_at__gte=last_translated_submission.created_at)
 
         for submission in submissions_to_check:
             translated_segments, total_segments = submission.get_translation_progress(language)
@@ -228,11 +228,6 @@ class PontoonResourceTranslation(models.Model):
     revision = models.OneToOneField('wagtailcore.PageRevision', on_delete=models.CASCADE, related_name='pontoon_translation')
 
     created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = [
-            ('submission', 'language'),
-        ]
 
 
 @transaction.atomic
