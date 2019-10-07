@@ -12,8 +12,6 @@ from wagtail_localize.segments.extract import extract_segments
 from wagtail_localize.translation_memory.models import Segment, SegmentPageLocation
 from wagtail_localize.translation_memory.utils import insert_segments, get_translation_progress
 
-from .page_updater import create_or_update_translated_page
-
 
 class PontoonSyncLog(models.Model):
     ACTION_PUSH = 1
@@ -217,23 +215,6 @@ class PontoonResourceSubmission(models.Model):
         - The number of segments that have been translated into the target language
         """
         return get_translation_progress(self.revision_id, language)
-
-    @transaction.atomic
-    def create_or_update_translated_page(self, language):
-        """
-        Creates/updates the translated page to reflect the translations in translation memory.
-
-        Note, all strings in the submission must be translated into the target language!
-        """
-        revision, created = create_or_update_translated_page(self.revision, language)
-
-        PontoonResourceTranslation.objects.create(
-            submission=self,
-            language=language,
-            revision=revision,
-        )
-
-        return revision, created
 
 
 class PontoonResourceTranslation(models.Model):

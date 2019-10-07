@@ -13,29 +13,7 @@ from wagtail_localize.translation_memory.models import Segment
 from .git import Repository
 from .models import PontoonResourceSubmission, PontoonResource, PontoonSyncLog, PontoonSyncLogResource
 from .pofile import generate_source_pofile, generate_language_pofile
-
-
-def _try_update_resource_translation(resource, language, logger):
-    # Check if there is a submission ready to be translated
-    translatable_submission = resource.find_translatable_submission(language)
-
-    if translatable_submission:
-        logger.info(f"Saving translated page for '{resource.page.title}' in {language.get_display_name()}")
-
-        try:
-            revision, created = translatable_submission.create_or_update_translated_page(language)
-        except ParentNotTranslatedError:
-            # These pages will be handled when the parent is created in the code below
-            logger.info(f"Cannot save translated page for '{resource.page.title}' in {language.get_display_name()} yet as its parent must be translated first")
-
-        if created:
-            # Check if this page has any children that may be ready to translate
-            child_page_resources = PontoonResource.objects.filter(
-                page__in=revision.page.get_children()
-            )
-
-            for resource in child_page_resources:
-                _try_update_resource_translation(resource, language, logger)
+from .importer import Importer
 
 
 @transaction.atomic
@@ -46,61 +24,16 @@ def _pull(repo, logger):
     if last_log is not None:
         last_commit_id = last_log.commit_id
 
-    # Create a new log for this pull
-    log = PontoonSyncLog.objects.create(
-        action=PontoonSyncLog.ACTION_PULL,
-        commit_id=repo.get_head_commit_id(),
-    )
-
     current_commit_id = repo.get_head_commit_id()
 
     if last_commit_id == current_commit_id:
         logger.info("Pull: No changes since last sync")
         return
 
+    importer = Importer(Language.objects.default(), logger)
+    importer.start_import(current_commit_id)
     for filename, old_content, new_content in repo.get_changed_files(last_commit_id, repo.get_head_commit_id()):
-        logger.info(f"Pull: Importing changes in file '{filename}'")
-        resource, language = PontoonResource.get_by_po_filename(filename)
-
-        # Log that this resource was updated
-        PontoonSyncLogResource.objects.create(
-            log=log,
-            resource=resource,
-            language=language,
-        )
-
-        old_po = polib.pofile(old_content.decode('utf-8'))
-        new_po = polib.pofile(new_content.decode('utf-8'))
-
-        with transaction.atomic():
-            # TODO: Different source languages?
-            source_language = Language.objects.default()
-
-            for changed_entry in set(new_po) - set(old_po):
-                try:
-                    segment = Segment.objects.get(language=source_language, text=changed_entry.msgid)
-                    translation, created = segment.translations.get_or_create(
-                        language=language,
-                        defaults={
-                            'text': changed_entry.msgstr,
-                            'updated_at': timezone.now(),
-                        }
-                    )
-
-                    if not created:
-                        # Update the translation only if the text has changed
-                        if translation.text != changed_entry.msgstr:
-                            translation.text = changed_entry.msgstr
-                            translation.updated_at = timezone.now()
-                            translation.save()
-
-                            # TODO: Update previously translated pages that used this string?
-
-                except Segment.DoesNotExist:
-                    logger.warning(f"Unrecognised segment '{changed_entry.msgid}'")
-
-            # Check if the translated page is ready to be created/updated
-            _try_update_resource_translation(resource, language, logger)
+        importer.import_file(filename, old_content, new_content)
 
 
 @transaction.atomic
