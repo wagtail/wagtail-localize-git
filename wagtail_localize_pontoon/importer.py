@@ -130,11 +130,12 @@ class Importer:
                 self.logger.info(
                     f"Cannot save translated page for '{resource.page.title}' in {language.get_display_name()} yet as its parent must be translated first"
                 )
+                return
 
             if created:
                 # Check if this page has any children that may be ready to translate
                 child_page_resources = PontoonResource.objects.filter(
-                    page__in=revision.page.get_children()
+                    page__in=resource.page.get_children()
                 )
 
                 for resource in child_page_resources:
@@ -157,8 +158,7 @@ class Importer:
         old_po = polib.pofile(old_content.decode("utf-8"))
         new_po = polib.pofile(new_content.decode("utf-8"))
 
-        with transaction.atomic():
-            self.import_resource(resource, language, old_po, new_po)
+        self.import_resource(resource, language, old_po, new_po)
 
-            # Check if the translated page is ready to be created/updated
-            self.try_update_resource_translation(resource, language)
+        # Check if the translated page is ready to be created/updated
+        self.try_update_resource_translation(resource, language)

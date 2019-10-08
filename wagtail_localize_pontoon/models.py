@@ -171,12 +171,16 @@ class PontoonResource(models.Model):
             )
 
         for submission in submissions_to_check:
-            translated_segments, total_segments = submission.get_translation_progress(
+            total_segments, translated_segments = submission.get_translation_progress(
                 language
             )
 
             if translated_segments == total_segments:
                 return submission
+            else:
+                import pdb
+
+                pdb.set_trace()
 
     def latest_submission(self):
         return self.submissions.latest("created_at")
