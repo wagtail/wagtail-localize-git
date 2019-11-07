@@ -177,10 +177,6 @@ class PontoonResource(models.Model):
 
             if translated_segments == total_segments:
                 return submission
-            else:
-                import pdb
-
-                pdb.set_trace()
 
     def latest_submission(self):
         return self.submissions.latest("created_at")
