@@ -45,7 +45,7 @@ class TestImporter(TestCase):
         )
         self.resource = PontoonResource.objects.get(page=self.page)
 
-        self.language = Language.objects.create(code="fr")
+        self.language = Language.objects.create(code="fr-FR")
 
     def test_importer(self):
         with self.subTest(stage="New page"):
