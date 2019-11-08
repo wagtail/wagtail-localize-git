@@ -31,22 +31,33 @@ def generate_language_pofile(resource, language):
         "Language": language.as_rfc5646_language_tag(),
     }
 
+    # Live segments
     for segment in (
-        resource.get_segments(include_obsolete=True, annotate_obsolete=True)
+        resource.get_segments()
         .annotate_translation(language)
         .iterator()
     ):
-        # Filter out obsolete entries that haven't been translated
-        # TODO: Do this in SQL query
-        if segment.is_obsolete and segment.translation is None:
-            continue
-
         po.append(
             polib.POEntry(
                 msgid=segment.text,
                 msgstr=segment.translation or "",
-                obsolete=segment.is_obsolete,
             )
         )
+
+    # Add any obsolete segments that have translations for future referene
+    for segment in (
+        resource.get_all_segments(annotate_obsolete=True)
+        .annotate_translation(language)
+        .filter(is_obsolete=True, translation__isnull=False)
+        .iterator()
+    ):
+        po.append(
+            polib.POEntry(
+                msgid=segment.text,
+                msgstr=segment.translation or "",
+                obsolete=True,
+            )
+        )
+
 
     return str(po)

@@ -117,24 +117,23 @@ class PontoonResource(models.Model):
             "Filename must begin with either 'templates' or 'locales'"
         )
 
-    def get_segments(self, include_obsolete=False, annotate_obsolete=False):
+    def get_segments(self):
         """
         Gets all segments that are in the latest submission to Pontoon.
-
-        If obsolete segments are requested, this will also return all
-        segments that have appeared in a past submission to Pontoon.
         """
-        if include_obsolete is False:
-            segments = Segment.objects.filter(
-                page_locations__page_revision_id=self.current_revision_id
-            )
+        return Segment.objects.filter(
+            page_locations__page_revision_id=self.current_revision_id
+        )
 
-        else:
-            segments = Segment.objects.filter(
-                page_locations__page_revision__pontoon_submission__resource_id=self.pk
-            )
+    def get_all_segments(self, annotate_obsolete=False):
+        """
+        Gets all segments that have ever been submitted to Pontoon.
+        """
+        segments = Segment.objects.filter(
+            page_locations__page_revision__pontoon_submission__resource_id=self.pk
+        )
 
-        if annotate_obsolete is True:
+        if annotate_obsolete:
             segments = segments.annotate(
                 is_obsolete=~Exists(
                     SegmentPageLocation.objects.filter(
@@ -144,7 +143,7 @@ class PontoonResource(models.Model):
                 )
             )
 
-        return segments.order_by("page_locations__order", "id").distinct()
+        return segments.distinct()
 
     def find_translatable_submission(self, language):
         """

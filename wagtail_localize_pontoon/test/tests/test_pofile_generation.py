@@ -1,6 +1,7 @@
 import logging
 
 import polib
+from django.db.models import F
 from django.test import TestCase
 
 from wagtail.core.models import Page
@@ -28,7 +29,42 @@ def create_test_page(**kwargs):
     return page
 
 
-class TestImporter(TestCase):
+class TestGenerateSourcePOFile(TestCase):
+    def setUp(self):
+        self.page = create_test_page(
+            title="Test page",
+            slug="test-page",
+            test_translatable_field="The test translatable field",
+            test_synchronized_field="The test synchronized field",
+        )
+        self.resource = PontoonResource.objects.get(page=self.page)
+
+    def test_generate_source_pofile(self):
+        pofile = generate_source_pofile(self.resource)
+        parsed_po = polib.pofile(pofile)
+        self.assertEqual(
+            [(m.msgid, m.msgstr) for m in parsed_po],
+            [("The test translatable field", "")],
+        )
+
+    def test_generate_source_pofile_with_multiple_revisions(self):
+        # Create another revision with the same segment text, but in a different otder
+        # We check this to make sure that the segment is not duplicated in the PO file
+        # See issue: https://github.com/mozilla/donate-wagtail/issues/559
+
+        new_revision = self.page.save_revision()
+        new_revision.publish()
+        SegmentPageLocation.objects.filter(page_revision=new_revision).update(order=F('order') + 1)
+
+        pofile = generate_source_pofile(self.resource)
+        parsed_po = polib.pofile(pofile)
+        self.assertEqual(
+            [(m.msgid, m.msgstr) for m in parsed_po],
+            [("The test translatable field", "")],
+        )
+
+
+class TestGenerateLanguagePOFile(TestCase):
     def setUp(self):
         self.page = create_test_page(
             title="Test page",
@@ -38,14 +74,6 @@ class TestImporter(TestCase):
         )
         self.resource = PontoonResource.objects.get(page=self.page)
         self.language = Language.objects.create(code="fr")
-
-    def test_generate_source_pofile(self):
-        pofile = generate_source_pofile(self.resource)
-        parsed_po = polib.pofile(pofile)
-        self.assertEqual(
-            [(m.msgid, m.msgstr) for m in parsed_po],
-            [("The test translatable field", "")],
-        )
 
     def test_generate_language_pofile(self):
         pofile = generate_language_pofile(self.resource, self.language)
@@ -94,4 +122,20 @@ class TestImporter(TestCase):
                 ("The test translatable field", "", 0),
                 ("Some obsolete text", "Du texte obsolète", 1),
             ],
+        )
+
+    def test_generate_language_pofile_with_multiple_revisions(self):
+        # Create another revision with the same segment text, but in a different otder
+        # We check this to make sure that the segment is not duplicated in the PO file
+        # See issue: https://github.com/mozilla/donate-wagtail/issues/559
+
+        new_revision = self.page.save_revision()
+        new_revision.publish()
+        SegmentPageLocation.objects.filter(page_revision=new_revision).update(order=F('order') + 1)
+
+        pofile = generate_language_pofile(self.resource, self.language)
+        parsed_po = polib.pofile(pofile)
+        self.assertEqual(
+            [(m.msgid, m.msgstr) for m in parsed_po],
+            [("The test translatable field", "")],
         )
