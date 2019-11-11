@@ -6,15 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wagtailsearchpromotions', '0002_capitalizeverbose'),
-        ('wagtailredirects', '0006_redirect_increase_max_length'),
-        ('wagtailcore', '0041_group_collection_permissions_verbose_name_plural'),
-        ('wagtailforms', '0003_capitalizeverbose'),
-        ('wagtail_localize_pontoon_test', '0002_auto_20191007_1608'),
+        ("wagtailsearchpromotions", "0002_capitalizeverbose"),
+        ("wagtailredirects", "0006_redirect_increase_max_length"),
+        ("wagtailcore", "0041_group_collection_permissions_verbose_name_plural"),
+        ("wagtailforms", "0003_capitalizeverbose"),
+        ("wagtail_localize_pontoon_test", "0002_auto_20191007_1608"),
     ]
 
-    operations = [
-        migrations.DeleteModel(
-            name='TestPage',
-        ),
-    ]
+    operations = [migrations.DeleteModel(name="TestPage")]

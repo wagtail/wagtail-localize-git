@@ -188,8 +188,7 @@ class TestImporter(TestCase):
             )
             self.assertFalse(translated_parent.is_source_translation)
             self.assertEqual(
-                translated_parent.test_charfield,
-                "Le champ traduisible de test",
+                translated_parent.test_charfield, "Le champ traduisible de test"
             )
             self.assertEqual(
                 translated_parent.test_synchronizedfield, "The test synchronized field"
@@ -223,19 +222,24 @@ class TestImporterRichText(TestCase):
         self.page = create_test_page(
             title="Test page",
             slug="test-page",
-            test_richtextfield="<p><a href=\"https://www.example.com\">The <b>test</b> translatable field</a></p>",
+            test_richtextfield='<p><a href="https://www.example.com">The <b>test</b> translatable field</a></p>',
         )
         self.resource = PontoonResource.objects.get(page=self.page)
 
         self.language = Language.objects.create(code="fr-FR")
 
     def test_importer_rich_text(self):
-        po_v1 = create_test_po([("<a id=\"a1\">The <b>test</b> translatable field</a>", "")]).encode(
-            "utf-8"
-        )
+        po_v1 = create_test_po(
+            [('<a id="a1">The <b>test</b> translatable field</a>', "")]
+        ).encode("utf-8")
 
         po_v2 = create_test_po(
-            [("<a id=\"a1\">The <b>test</b> translatable field</a>", "<a id=\"a1\">Le champ traduisible de <b>test</b></a>")]
+            [
+                (
+                    '<a id="a1">The <b>test</b> translatable field</a>',
+                    '<a id="a1">Le champ traduisible de <b>test</b></a>',
+                )
+            ]
         ).encode("utf-8")
 
         importer = Importer(Language.objects.default(), logging.getLogger("dummy"))
@@ -251,5 +255,6 @@ class TestImporterRichText(TestCase):
 
         # Check rich text field was created correctly
         self.assertHTMLEqual(
-            translated_page.test_richtextfield, "<p><a href=\"https://www.example.com\">Le champ traduisible de <b>test</b></a></p>"
+            translated_page.test_richtextfield,
+            '<p><a href="https://www.example.com">Le champ traduisible de <b>test</b></a></p>',
         )
