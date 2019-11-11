@@ -32,17 +32,8 @@ def generate_language_pofile(resource, language):
     }
 
     # Live segments
-    for segment in (
-        resource.get_segments()
-        .annotate_translation(language)
-        .iterator()
-    ):
-        po.append(
-            polib.POEntry(
-                msgid=segment.text,
-                msgstr=segment.translation or "",
-            )
-        )
+    for segment in resource.get_segments().annotate_translation(language).iterator():
+        po.append(polib.POEntry(msgid=segment.text, msgstr=segment.translation or ""))
 
     # Add any obsolete segments that have translations for future referene
     for segment in (
@@ -53,11 +44,8 @@ def generate_language_pofile(resource, language):
     ):
         po.append(
             polib.POEntry(
-                msgid=segment.text,
-                msgstr=segment.translation or "",
-                obsolete=True,
+                msgid=segment.text, msgstr=segment.translation or "", obsolete=True
             )
         )
-
 
     return str(po)

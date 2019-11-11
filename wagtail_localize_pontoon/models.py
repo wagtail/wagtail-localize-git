@@ -110,16 +110,15 @@ class PontoonResource(models.Model):
             path = PurePosixPath(*parts[2:]).with_suffix("")
             return (
                 cls.objects.get(path=path),
-
                 # NOTE: Pontoon Uses RFC 5646 style language tags
                 # but since this is a site that relies on Pontoon
                 # for translation, we assumme that Language model
                 # uses RFC 5646 style language tags as well.
                 # If this isn't the case, then the following
                 # commented-out line should be used instead.
-
+                #
                 # TODO: Think of a way to make this configurable.
-
+                #
                 # Language.get_by_rfc5646_language_tag(parts[1]),
                 Language.objects.get(code=parts[1]),
             )

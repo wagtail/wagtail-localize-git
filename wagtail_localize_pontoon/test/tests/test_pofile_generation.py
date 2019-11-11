@@ -54,7 +54,9 @@ class TestGenerateSourcePOFile(TestCase):
 
         new_revision = self.page.save_revision()
         new_revision.publish()
-        SegmentPageLocation.objects.filter(page_revision=new_revision).update(order=F('order') + 1)
+        SegmentPageLocation.objects.filter(page_revision=new_revision).update(
+            order=F("order") + 1
+        )
 
         pofile = generate_source_pofile(self.resource)
         parsed_po = polib.pofile(pofile)
@@ -131,7 +133,9 @@ class TestGenerateLanguagePOFile(TestCase):
 
         new_revision = self.page.save_revision()
         new_revision.publish()
-        SegmentPageLocation.objects.filter(page_revision=new_revision).update(order=F('order') + 1)
+        SegmentPageLocation.objects.filter(page_revision=new_revision).update(
+            order=F("order") + 1
+        )
 
         pofile = generate_language_pofile(self.resource, self.language)
         parsed_po = polib.pofile(pofile)
