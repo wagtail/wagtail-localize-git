@@ -1,3 +1,5 @@
+import json
+
 from django.db import transaction
 from django.utils import timezone
 from django.utils.text import slugify
@@ -59,7 +61,10 @@ class Importer:
         segments = []
 
         for page_location in segment_page_locations:
-            segment = SegmentValue(page_location.path, page_location.translation)
+            segment = SegmentValue.from_html(page_location.path, page_location.translation)
+            if page_location.html_attributes:
+                segment.replace_html_element_attrs(json.loads(page_location.html_attributes))
+
             segments.append(segment)
 
         for page_location in template_page_locations:

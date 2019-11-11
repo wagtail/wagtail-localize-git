@@ -216,3 +216,40 @@ class TestImporter(TestCase):
             log_resource = log.resources.get()
             self.assertEqual(log_resource.resource, self.resource)
             self.assertEqual(log_resource.language, self.language)
+
+
+class TestImporterRichText(TestCase):
+    def setUp(self):
+        self.page = create_test_page(
+            title="Test page",
+            slug="test-page",
+            test_richtextfield="<p><a href=\"https://www.example.com\">The <b>test</b> translatable field</a></p>",
+        )
+        self.resource = PontoonResource.objects.get(page=self.page)
+
+        self.language = Language.objects.create(code="fr-FR")
+
+    def test_importer_rich_text(self):
+        po_v1 = create_test_po([("<a id=\"a1\">The <b>test</b> translatable field</a>", "")]).encode(
+            "utf-8"
+        )
+
+        po_v2 = create_test_po(
+            [("<a id=\"a1\">The <b>test</b> translatable field</a>", "<a id=\"a1\">Le champ traduisible de <b>test</b></a>")]
+        ).encode("utf-8")
+
+        importer = Importer(Language.objects.default(), logging.getLogger("dummy"))
+        importer.start_import("0" * 40)
+        importer.import_file(
+            self.resource.get_po_filename(language=self.language), po_v1, po_v2
+        )
+
+        # Check translated page was created
+        translated_page = TestPage.objects.get(locale__language=self.language)
+        self.assertEqual(translated_page.translation_key, self.page.translation_key)
+        self.assertFalse(translated_page.is_source_translation)
+
+        # Check rich text field was created correctly
+        self.assertHTMLEqual(
+            translated_page.test_richtextfield, "<p><a href=\"https://www.example.com\">Le champ traduisible de <b>test</b></a></p>"
+        )
