@@ -6,6 +6,7 @@ from django.test import TestCase
 
 from wagtail.core.models import Page
 from wagtail_localize.models import Language
+from wagtail_localize.test.models import TestPage
 from wagtail_localize.translation_memory.models import (
     Segment,
     SegmentTranslation,
@@ -17,8 +18,6 @@ from wagtail_localize_pontoon.pofile import (
     generate_source_pofile,
     generate_language_pofile,
 )
-
-from ..models import TestPage
 
 
 def create_test_page(**kwargs):
@@ -34,8 +33,8 @@ class TestGenerateSourcePOFile(TestCase):
         self.page = create_test_page(
             title="Test page",
             slug="test-page",
-            test_translatable_field="The test translatable field",
-            test_synchronized_field="The test synchronized field",
+            test_charfield="The test translatable field",
+            test_synchronizedfield="The test synchronized field",
         )
         self.resource = PontoonResource.objects.get(page=self.page)
 
@@ -71,8 +70,8 @@ class TestGenerateLanguagePOFile(TestCase):
         self.page = create_test_page(
             title="Test page",
             slug="test-page",
-            test_translatable_field="The test translatable field",
-            test_synchronized_field="The test synchronized field",
+            test_charfield="The test translatable field",
+            test_synchronizedfield="The test synchronized field",
         )
         self.resource = PontoonResource.objects.get(page=self.page)
         self.language = Language.objects.create(code="fr")

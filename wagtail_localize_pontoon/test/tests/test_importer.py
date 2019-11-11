@@ -6,11 +6,10 @@ from django.utils import timezone
 
 from wagtail.core.models import Page
 from wagtail_localize.models import Language
+from wagtail_localize.test.models import TestPage
 
 from wagtail_localize_pontoon.importer import Importer
 from wagtail_localize_pontoon.models import PontoonResource, PontoonSyncLog
-
-from ..models import TestPage
 
 
 def create_test_page(**kwargs):
@@ -40,8 +39,8 @@ class TestImporter(TestCase):
         self.page = create_test_page(
             title="Test page",
             slug="test-page",
-            test_translatable_field="The test translatable field",
-            test_synchronized_field="The test synchronized field",
+            test_charfield="The test translatable field",
+            test_synchronizedfield="The test synchronized field",
         )
         self.resource = PontoonResource.objects.get(page=self.page)
 
@@ -68,10 +67,10 @@ class TestImporter(TestCase):
             self.assertEqual(translated_page.translation_key, self.page.translation_key)
             self.assertFalse(translated_page.is_source_translation)
             self.assertEqual(
-                translated_page.test_translatable_field, "Le champ traduisible de test"
+                translated_page.test_charfield, "Le champ traduisible de test"
             )
             self.assertEqual(
-                translated_page.test_synchronized_field, "The test synchronized field"
+                translated_page.test_synchronizedfield, "The test synchronized field"
             )
 
             # Check log
@@ -104,11 +103,11 @@ class TestImporter(TestCase):
             self.assertEqual(translated_page.translation_key, self.page.translation_key)
             self.assertFalse(translated_page.is_source_translation)
             self.assertEqual(
-                translated_page.test_translatable_field,
+                translated_page.test_charfield,
                 "Le champ testable à traduire avec un contenu mis à jour",
             )
             self.assertEqual(
-                translated_page.test_synchronized_field, "The test synchronized field"
+                translated_page.test_synchronizedfield, "The test synchronized field"
             )
 
             # Check log
@@ -123,8 +122,8 @@ class TestImporter(TestCase):
         child_page = create_test_page(
             title="Test child page",
             slug="test-child-page",
-            test_translatable_field="The test child's translatable field",
-            test_synchronized_field="The test synchronized field",
+            test_charfield="The test child's translatable field",
+            test_synchronizedfield="The test synchronized field",
             parent=self.page,
         )
         child_resource = PontoonResource.objects.get(page=child_page)
@@ -189,11 +188,11 @@ class TestImporter(TestCase):
             )
             self.assertFalse(translated_parent.is_source_translation)
             self.assertEqual(
-                translated_parent.test_translatable_field,
+                translated_parent.test_charfield,
                 "Le champ traduisible de test",
             )
             self.assertEqual(
-                translated_parent.test_synchronized_field, "The test synchronized field"
+                translated_parent.test_synchronizedfield, "The test synchronized field"
             )
 
             translated_child = child_page.get_translations().get(
@@ -204,10 +203,10 @@ class TestImporter(TestCase):
             )
             self.assertFalse(translated_child.is_source_translation)
             self.assertEqual(
-                translated_child.test_translatable_field, "Le champ traduisible de test"
+                translated_child.test_charfield, "Le champ traduisible de test"
             )
             self.assertEqual(
-                translated_child.test_synchronized_field, "The test synchronized field"
+                translated_child.test_synchronizedfield, "The test synchronized field"
             )
 
             # Check log
