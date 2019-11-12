@@ -64,9 +64,9 @@ class Importer:
             segment = SegmentValue.from_html(
                 page_location.path, page_location.translation
             )
-            if page_location.html_attributes:
-                segment.replace_html_element_attrs(
-                    json.loads(page_location.html_attributes)
+            if page_location.html_attrs:
+                segment.replace_html_attrs(
+                    json.loads(page_location.html_attrs)
                 )
 
             segments.append(segment)
