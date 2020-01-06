@@ -65,9 +65,7 @@ class Importer:
                 page_location.path, page_location.translation
             )
             if page_location.html_attrs:
-                segment.replace_html_attrs(
-                    json.loads(page_location.html_attrs)
-                )
+                segment.replace_html_attrs(json.loads(page_location.html_attrs))
 
             segments.append(segment)
 
