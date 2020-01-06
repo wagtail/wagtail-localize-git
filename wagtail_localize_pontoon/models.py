@@ -158,7 +158,7 @@ class PontoonResource(models.Model):
                     context_id=OuterRef("context_id"),
                 )
             )
-        ).filter(language=language, is_in_latest_submission=False)
+        ).filter(language=language, is_in_latest_submission=False, context__object_id=self.object_id)
 
     def find_translatable_submission(self, language):
         """
