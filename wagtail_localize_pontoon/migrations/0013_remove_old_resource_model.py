@@ -6,6 +6,8 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
     dependencies = [
         ("wagtail_localize_pontoon", "0012_populate_new_resource_model"),
     ]
