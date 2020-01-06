@@ -2,3 +2,4 @@
 /build
 /dist
 /wagtail_localize_pontoon.egg-info
+/venv
