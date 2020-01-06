@@ -2,8 +2,6 @@
 
 Use [Pontoon](https://pontoon.mozilla.org/) as a translation engine for [wagtail-localize](https://github.com/kaedroho/wagtail-localize).
 
-**Note: This project will be merged into `wagtail-localize` soon.**
-
 ## Installation
 
 Install both `wagtail-localize` and `wagtail-localize-pontoon`, then add the following to your `INSTALLED_APPS`:
