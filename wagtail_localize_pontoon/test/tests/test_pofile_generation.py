@@ -35,7 +35,7 @@ class TestGenerateSourcePOFile(TestCase):
             title="Test page",
             slug="test-page",
             test_charfield="The test translatable field",
-            test_synchronizedfield="The test synchronized field",
+            test_synchronized_charfield="The test synchronized field",
         )
         self.resource = PontoonResource.objects.get(
             object__translation_key=self.page.translation_key
@@ -74,7 +74,7 @@ class TestGenerateLanguagePOFile(TestCase):
             title="Test page",
             slug="test-page",
             test_charfield="The test translatable field",
-            test_synchronizedfield="The test synchronized field",
+            test_synchronized_charfield="The test synchronized field",
         )
         self.resource = PontoonResource.objects.get(
             object__translation_key=self.page.translation_key
