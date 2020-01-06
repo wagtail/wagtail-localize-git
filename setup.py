@@ -41,10 +41,6 @@ setup(
         "gitpython>=3.0,<4.0",
         "toml>=0.10,<0.11",
     ],
-    extras_require={
-        "testing": [
-            "dj-database-url==0.5.0",
-        ],
-    },
+    extras_require={"testing": ["dj-database-url==0.5.0",],},
     zip_safe=False,
 )
