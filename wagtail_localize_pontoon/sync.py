@@ -104,7 +104,7 @@ def _push(repo, logger):
         id__in=pushed_submission_ids, push_log__isnull=True
     )
 
-    if pushed_submissions.exists():
+    if writer.has_changes() or pushed_submissions.exists():
         # Create a new log for this push
         log = PontoonSyncLog.objects.create(
             action=PontoonSyncLog.ACTION_PUSH, commit_id=""
@@ -122,12 +122,13 @@ def _push(repo, logger):
 
             log.commit_id = repo.get_head_commit_id()
             log.save(update_fields=["commit_id"])
+
+            repo.push()
         else:
             logger.info(
                 "Push: Not committing anything as recent changes haven't affected any translatable content"
             )
 
-        repo.push()
     else:
         logger.info("Push: No changes since last sync")
 
