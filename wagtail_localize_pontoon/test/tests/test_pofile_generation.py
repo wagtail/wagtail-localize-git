@@ -7,7 +7,7 @@ from django.test import TestCase
 from wagtail.core.models import Page
 from wagtail_localize.models import Language
 from wagtail_localize.test.models import TestPage
-from wagtail_localize.translation_memory.models import (
+from wagtail_localize.translation.models import (
     Segment,
     SegmentTranslationContext,
     SegmentTranslation,

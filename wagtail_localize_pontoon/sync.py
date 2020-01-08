@@ -8,7 +8,7 @@ from django.utils.module_loading import import_string
 import polib
 
 from wagtail_localize.models import Language, ParentNotTranslatedError
-from wagtail_localize.translation_memory.models import Segment
+from wagtail_localize.translation.models import Segment
 
 from .git import Repository
 from .models import (
