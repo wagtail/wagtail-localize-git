@@ -3,3 +3,4 @@
 /dist
 /wagtail_localize_pontoon.egg-info
 /venv
+/test_wagtaillocalizepontoon.db
