@@ -10,7 +10,7 @@ Install both `wagtail-localize` and `wagtail-localize-pontoon`, then add the fol
 INSTALLED_APPS = [
     ...
     'wagtail_localize',
-    'wagtail_localize.translation_memory',
+    'wagtail_localize.translation',
     'wagtail_localize_pontoon',
     ...
 ]
@@ -40,13 +40,13 @@ Then finally run the `sync_pontoon` management command. This pushes the source s
 
 ## How it works
 
-This relies heavily on `wagtail-localize`'s `translation_memory` module to track which source strings need to be translated in order to create/update a translated version of a page.
+This relies heavily on `wagtail-localize`'s `translation` module to track which source strings need to be translated in order to create/update a translated version of a page.
 
 ### Creating submissions
 
 Pages are submitted to Pontoon when the English (US) version of any transltable page is published. Nothing is uploaded to git at this time (this would be done when the `sync_pontoon` management command is next run), but the following happens when the page is published:
 
- - All translatable segments are extracted from the page and saved into the `translation_memory.Segment` model. This model holds unique source strings, the locations where these strings appear on actual pages is stored in the `translation_memory.SegmentPageLocation` model.
+ - All translatable segments are extracted from the page and saved into the `translation.Segment` model. This model holds unique source strings, the locations where these strings appear on actual pages is stored in the `translation.SegmentPageLocation` model.
  - A `wagtail_localize_pontoon.PontoonResourceSubmission` is created to note which page revision needs to be submitted to Pontoon.
 
 Note: The `submit_whole_site_to_pontoon` command runs this process for all live translatable pages.
@@ -65,9 +65,9 @@ If a segment is no longer used on a page, it is removed from the source `.pot` f
 
 At the beginning of the `sync_pontoon` command, the git repo is fetched and if there are any changes, a diff is performed between the new remote `HEAD` and the local `HEAD`.
 
-If any of the locale PO files have been modified, they will be parsed and any new/changed translations saved in the `translation_memory.SegmentTranslation` model.
+If any of the locale PO files have been modified, they will be parsed and any new/changed translations saved in the `translation.SegmentTranslation` model.
 
-After a locale PO file is imported, the translation progress of the associated page is checked by making a query against the `translation_memory.{Segment,SegmentTranslation}` models. If the page is ready to be translated, it will create/update the translated version of the page and publish it.
+After a locale PO file is imported, the translation progress of the associated page is checked by making a query against the `translation.{Segment,SegmentTranslation}` models. If the page is ready to be translated, it will create/update the translated version of the page and publish it.
 
 If a page is ready to be translated, but it's parent is not translated into the target language, the translation is delayed until the parent is translated.
 

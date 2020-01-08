@@ -12,9 +12,9 @@ from wagtail_localize.models import (
     ParentNotTranslatedError,
     TranslatablePageMixin,
 )
-from wagtail_localize.segments import SegmentValue, TemplateValue
-from wagtail_localize.segments.ingest import ingest_segments
-from wagtail_localize.translation_memory.models import (
+from wagtail_localize.translation.segments import SegmentValue, TemplateValue
+from wagtail_localize.translation.segments.ingest import ingest_segments
+from wagtail_localize.translation.models import (
     Segment,
     SegmentLocation,
     TemplateLocation,
