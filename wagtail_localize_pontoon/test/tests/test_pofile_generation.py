@@ -5,7 +5,7 @@ from django.db.models import F
 from django.test import TestCase
 
 from wagtail.core.models import Page
-from wagtail_localize.models import Language
+from wagtail_localize.models import Language, Locale
 from wagtail_localize.test.models import TestPage
 from wagtail_localize.translation.models import (
     Segment,
@@ -17,7 +17,7 @@ from wagtail_localize.translation.models import (
 from wagtail_localize_pontoon.models import PontoonResource
 from wagtail_localize_pontoon.pofile import (
     generate_source_pofile,
-    generate_language_pofile,
+    generate_locale_pofile,
 )
 
 
@@ -79,36 +79,37 @@ class TestGenerateLanguagePOFile(TestCase):
         self.resource = PontoonResource.objects.get(
             object__translation_key=self.page.translation_key
         )
-        self.language = Language.objects.create(code="fr")
+        Language.objects.create(code="fr")
+        self.locale = Locale.objects.get(language__code="fr")
 
-    def test_generate_language_pofile(self):
-        pofile = generate_language_pofile(self.resource, self.language)
+    def test_generate_locale_pofile(self):
+        pofile = generate_locale_pofile(self.resource, self.locale)
         parsed_po = polib.pofile(pofile)
         self.assertEqual(
             [(m.msgid, m.msgstr) for m in parsed_po],
             [("The test translatable field", "")],
         )
 
-    def test_generate_language_pofile_with_existing_translation(self):
+    def test_generate_locale_pofile_with_existing_translation(self):
         segment = Segment.objects.get(text="The test translatable field")
         context = SegmentTranslationContext.objects.get(
             object_id=self.page.translation_key, path="test_charfield"
         )
         SegmentTranslation.objects.create(
             translation_of=segment,
-            language=self.language,
+            language_id=self.locale.language_id,
             context=context,
             text="Le champ traduisible de test",
         )
 
-        pofile = generate_language_pofile(self.resource, self.language)
+        pofile = generate_locale_pofile(self.resource, self.locale)
         parsed_po = polib.pofile(pofile)
         self.assertEqual(
             [(m.msgid, m.msgstr) for m in parsed_po],
             [("The test translatable field", "Le champ traduisible de test")],
         )
 
-    def test_generate_language_pofile_with_existing_obsolete_translation(self):
+    def test_generate_locale_pofile_with_existing_obsolete_translation(self):
         # Update the existing segment. The save_revision bit below will generate a new segment with the current text
         segment = Segment.objects.get()
         segment.text = "Some obsolete text"
@@ -121,7 +122,7 @@ class TestGenerateLanguagePOFile(TestCase):
         SegmentTranslation.objects.create(
             translation_of=segment,
             context=context,
-            language=self.language,
+            language_id=self.locale.language_id,
             text="Du texte obsolète",
         )
 
@@ -130,7 +131,7 @@ class TestGenerateLanguagePOFile(TestCase):
         self.page.save_revision().publish()
         self.resource.refresh_from_db()
 
-        pofile = generate_language_pofile(self.resource, self.language)
+        pofile = generate_locale_pofile(self.resource, self.locale)
         parsed_po = polib.pofile(pofile)
         self.assertEqual(
             [(m.msgid, m.msgstr, m.obsolete) for m in parsed_po],
@@ -140,7 +141,7 @@ class TestGenerateLanguagePOFile(TestCase):
             ],
         )
 
-    def test_generate_language_pofile_with_multiple_revisions(self):
+    def test_generate_locale_pofile_with_multiple_revisions(self):
         # Create another revision with the same segment text, but in a different otder
         # We check this to make sure that the segment is not duplicated in the PO file
         # See issue: https://github.com/mozilla/donate-wagtail/issues/559
@@ -151,7 +152,7 @@ class TestGenerateLanguagePOFile(TestCase):
             order=F("order") + 1
         )
 
-        pofile = generate_language_pofile(self.resource, self.language)
+        pofile = generate_locale_pofile(self.resource, self.locale)
         parsed_po = polib.pofile(pofile)
         self.assertEqual(
             [(m.msgid, m.msgstr) for m in parsed_po],

@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from wagtail.core.signals import page_published
-from wagtail_localize.models import TranslatablePageMixin, Locale, Language
+from wagtail_localize.models import TranslatablePageMixin, Locale
 from wagtail_localize.translation.segments import RelatedObjectValue
 from wagtail_localize.translation.segments.extract import extract_segments
 from wagtail_localize.translation.models import (
@@ -84,21 +84,21 @@ class PontoonResource(models.Model):
 
         return try_path
 
-    def get_po_filename(self, language=None):
+    def get_po_filename(self, locale=None):
         """
         Returns the filename of this resource within the git repository that is shared with Pontoon.
 
-        If a language is specified, the filename for that language is returned. Otherwise, the filename
+        If a locale is specified, the filename for that locale is returned. Otherwise, the filename
         of the template is returned.
         """
-        if language is not None:
-            base_path = PurePosixPath(f"locales/{language.as_rfc5646_language_tag()}")
+        if locale is not None:
+            base_path = PurePosixPath(
+                f"locales/{locale.language.as_rfc5646_language_tag()}"
+            )
         else:
             base_path = PurePosixPath("templates")
 
-        return (base_path / self.path).with_suffix(
-            ".pot" if language is None else ".po"
-        )
+        return (base_path / self.path).with_suffix(".pot" if locale is None else ".po")
 
     def get_locale_po_filename_template(self):
         """
@@ -133,7 +133,7 @@ class PontoonResource(models.Model):
                 # TODO: Think of a way to make this configurable.
                 #
                 # Language.get_by_rfc5646_language_tag(parts[1]),
-                Language.objects.get(code=parts[1]),
+                Locale.objects.get(region__is_default=True, language__code=parts[1]),
             )
 
         raise cls.DoesNotExist(
@@ -146,7 +146,7 @@ class PontoonResource(models.Model):
         """
         return SegmentLocation.objects.filter(revision_id=self.current_revision_id)
 
-    def get_obsolete_translations(self, language):
+    def get_obsolete_translations(self, locale):
         """
         Gets all past translations for this resource that are not used in
         the latest submission.
@@ -160,12 +160,12 @@ class PontoonResource(models.Model):
                 )
             )
         ).filter(
-            language=language,
+            language=locale.language,
             is_in_latest_submission=False,
             context__object_id=self.object_id,
         )
 
-    def find_translatable_submission(self, language):
+    def find_translatable_submission(self, locale):
         """
         Look to see if a submission is ready for translating.
 
@@ -173,13 +173,13 @@ class PontoonResource(models.Model):
         translated submission.
 
         A submission is considered translatable if all the strings in the submission have been translated into the
-        target language and the translated page hasn't been updated for a later submission.
+        target locale and the translated page hasn't been updated for a later submission.
         """
         submissions_to_check = self.submissions.order_by("-created_at")
 
         # Exclude submissions that pre-date the last translated submission
         last_translated_submission = (
-            self.submissions.annotate_translated(language)
+            self.submissions.annotate_translated(locale)
             .filter(is_translated=True)
             .order_by("created_at")
             .last()
@@ -191,7 +191,7 @@ class PontoonResource(models.Model):
 
         for submission in submissions_to_check:
             total_segments, translated_segments = submission.get_translation_progress(
-                language
+                locale.language
             )
 
             if translated_segments == total_segments:
@@ -225,10 +225,8 @@ class PontoonSyncLogResourceQuerySet(models.QuerySet):
             page_id__in=self.values_list("resource_id", flat=True)
         )
 
-    def unique_languages(self):
-        return Language.objects.filter(
-            id__in=self.values_list("language_id", flat=True)
-        )
+    def unique_locales(self):
+        return Locale.objects.filter(id__in=self.values_list("locale_id", flat=True))
 
 
 class PontoonSyncLogResource(models.Model):
@@ -239,9 +237,9 @@ class PontoonSyncLogResource(models.Model):
         PontoonResource, on_delete=models.CASCADE, related_name="logs"
     )
 
-    # Null if pushing this resource, otherwise set to the language being pulled
-    language = models.ForeignKey(
-        "wagtail_localize.Language",
+    # Null if pushing this resource, otherwise set to the locale being pulled
+    locale = models.ForeignKey(
+        "wagtail_localize.Locale",
         null=True,
         on_delete=models.CASCADE,
         related_name="+",
@@ -251,14 +249,14 @@ class PontoonSyncLogResource(models.Model):
 
 
 class PontoonResourceSubmissionQuerySet(models.QuerySet):
-    def annotate_translated(self, language):
+    def annotate_translated(self, locale):
         """
-        Adds is_translated flag which is True if the submission has been translated into the specified language.
+        Adds is_translated flag which is True if the submission has been translated into the specified locale.
         """
         return self.annotate(
             is_translated=Exists(
                 TranslationLog.objects.filter(
-                    revision_id=OuterRef("revision_id"), language=language
+                    revision_id=OuterRef("revision_id"), locale=locale
                 )
             )
         )
@@ -287,15 +285,15 @@ class PontoonResourceSubmission(models.Model):
 
     objects = PontoonResourceSubmissionQuerySet.as_manager()
 
-    def get_translation_progress(self, language):
+    def get_translation_progress(self, locale):
         """
-        Get the current translation progress into the specified language.
+        Get the current translation progress into the specified locale.
 
         Returns two integers:
         - The total number of segments in the submission to translate
-        - The number of segments that have been translated into the target language
+        - The number of segments that have been translated into the target locale
         """
-        return get_translation_progress(self.revision_id, language)
+        return get_translation_progress(self.revision_id, locale)
 
     def get_dependencies(self):
         """

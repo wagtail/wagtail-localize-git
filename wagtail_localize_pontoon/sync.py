@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.module_loading import import_string
 import polib
 
-from wagtail_localize.models import Language, ParentNotTranslatedError
+from wagtail_localize.models import Locale, ParentNotTranslatedError
 from wagtail_localize.translation.models import Segment
 
 from .git import Repository
@@ -17,7 +17,7 @@ from .models import (
     PontoonSyncLog,
     PontoonSyncLogResource,
 )
-from .pofile import generate_source_pofile, generate_language_pofile
+from .pofile import generate_source_pofile, generate_locale_pofile
 from .importer import Importer
 
 
@@ -35,7 +35,7 @@ def _pull(repo, logger):
         logger.info("Pull: No changes since last sync")
         return
 
-    importer = Importer(Language.objects.default(), logger)
+    importer = Importer(Locale.objects.default(), logger)
     importer.start_import(current_commit_id)
     for filename, old_content, new_content in repo.get_changed_files(
         last_commit_id, repo.get_head_commit_id()
@@ -64,8 +64,8 @@ def _push(repo, logger):
 
         writer.write_file(filename, new_po_string)
 
-    languages = Language.objects.filter(is_active=True).exclude(
-        id=Language.objects.default_id()
+    locales = Locale.objects.filter(is_active=True).exclude(
+        id=Locale.objects.default_id()
     )
 
     paths = []
@@ -80,10 +80,10 @@ def _push(repo, logger):
         source_po = generate_source_pofile(submission.resource)
         update_po(str(submission.resource.get_po_filename()), source_po)
 
-        for language in languages:
-            locale_po = generate_language_pofile(submission.resource, language)
+        for locale in locales:
+            locale_po = generate_locale_pofile(submission.resource, locale)
             update_po(
-                str(submission.resource.get_po_filename(language=language)), locale_po
+                str(submission.resource.get_po_filename(locale=locale)), locale_po
             )
 
         paths.append(
@@ -96,7 +96,7 @@ def _push(repo, logger):
         pushed_submission_ids.append(submission.id)
 
     writer.write_config(
-        [language.as_rfc5646_language_tag() for language in languages], paths
+        [locale.language.as_rfc5646_language_tag() for locale in locales], paths
     )
 
     # A queryset of submissions we've just written that haven't been pushed before

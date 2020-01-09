@@ -27,7 +27,7 @@ def generate_source_pofile(resource):
     return str(po)
 
 
-def generate_language_pofile(resource, language):
+def generate_locale_pofile(resource, locale):
     """
     Generate a translated PO file for the given resource/language
     """
@@ -36,14 +36,14 @@ def generate_language_pofile(resource, language):
         "POT-Creation-Date": str(timezone.now()),
         "MIME-Version": "1.0",
         "Content-Type": "text/html; charset=utf-8",
-        "Language": language.as_rfc5646_language_tag(),
+        "Language": locale.language.as_rfc5646_language_tag(),
     }
 
     # Live segments
     for segment in (
         resource.get_segments()
         .select_related("segment", "context")
-        .annotate_translation(language)
+        .annotate_translation(locale.language)
         .iterator()
     ):
         po.append(
@@ -59,7 +59,7 @@ def generate_language_pofile(resource, language):
     # translation for each one. Contexts that were never translated are
     # excluded
     for translation in (
-        resource.get_obsolete_translations(language)
+        resource.get_obsolete_translations(locale)
         .select_related("translation_of", "context")
         .filter(context__isnull=False)
         .iterator()
