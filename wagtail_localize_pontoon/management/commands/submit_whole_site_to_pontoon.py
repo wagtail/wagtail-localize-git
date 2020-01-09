@@ -35,4 +35,4 @@ class Command(BaseCommand):
                 print("Already submitted!")
                 continue
 
-            submit_page_to_pontoon(page, page_revision)
+            submit_page_to_pontoon(page_revision)
