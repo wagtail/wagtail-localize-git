@@ -20,7 +20,7 @@ def generate_source_pofile(resource):
             polib.POEntry(
                 msgid=segment.segment.text,
                 msgstr="",
-                msgctxt=segment.context.as_string(),
+                msgctxt=segment.context.path,
             )
         )
 
@@ -51,7 +51,7 @@ def generate_locale_pofile(resource, locale):
             polib.POEntry(
                 msgid=segment.segment.text,
                 msgstr=segment.translation or "",
-                msgctxt=segment.context.as_string(),
+                msgctxt=segment.context.path,
             )
         )
 
@@ -69,7 +69,7 @@ def generate_locale_pofile(resource, locale):
             polib.POEntry(
                 msgid=translation.translation_of.text,
                 msgstr=translation.text or "",
-                msgctxt=translation.context.as_string(),
+                msgctxt=translation.context.path,
                 obsolete=True,
             )
         )
