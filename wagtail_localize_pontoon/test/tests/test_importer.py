@@ -177,9 +177,7 @@ class TestImporter(TestCase):
 
             # Check translated page was not created
             self.assertFalse(
-                child_page.get_translations()
-                .filter(locale=self.locale)
-                .exists()
+                child_page.get_translations().filter(locale=self.locale).exists()
             )
 
             # Check log
@@ -219,9 +217,7 @@ class TestImporter(TestCase):
             )
 
             # Check both translated pages were created
-            translated_parent = self.page.get_translations().get(
-                locale=self.locale
-            )
+            translated_parent = self.page.get_translations().get(locale=self.locale)
             self.assertEqual(
                 translated_parent.translation_key, self.page.translation_key
             )
@@ -234,9 +230,7 @@ class TestImporter(TestCase):
                 "The test synchronized field",
             )
 
-            translated_child = child_page.get_translations().get(
-                locale=self.locale
-            )
+            translated_child = child_page.get_translations().get(locale=self.locale)
             self.assertEqual(
                 translated_child.translation_key, child_page.translation_key
             )

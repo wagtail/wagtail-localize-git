@@ -14,13 +14,14 @@ def generate_source_pofile(resource):
     }
 
     for segment in (
-        resource.get_segments().select_related("segment", "context").order_by("order").iterator()
+        resource.get_segments()
+        .select_related("segment", "context")
+        .order_by("order")
+        .iterator()
     ):
         po.append(
             polib.POEntry(
-                msgid=segment.segment.text,
-                msgstr="",
-                msgctxt=segment.context.path,
+                msgid=segment.segment.text, msgstr="", msgctxt=segment.context.path,
             )
         )
 

@@ -60,8 +60,7 @@ class Importer:
                 translation, created = segment.translations.get_or_create(
                     language=locale.language,
                     context=SegmentTranslationContext.objects.get(
-                        object_id=resource.object_id,
-                        path=changed_entry.msgctxt,
+                        object_id=resource.object_id, path=changed_entry.msgctxt,
                     )
                     if changed_entry.msgctxt
                     else None,
