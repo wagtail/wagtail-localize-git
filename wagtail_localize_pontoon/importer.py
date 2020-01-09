@@ -29,8 +29,8 @@ from .models import (
 
 
 class Importer:
-    def __init__(self, source_language, logger):
-        self.source_language = source_language
+    def __init__(self, source_locale, logger):
+        self.source_locale = source_locale
         self.logger = logger
         self.log = None
 
@@ -47,7 +47,7 @@ class Importer:
         for changed_key in new_entry_keys - old_entry_keys:
             yield new_entries[changed_key]
 
-    def import_resource(self, resource, language, old_po, new_po):
+    def import_resource(self, resource, locale, old_po, new_po):
         for changed_entry in self.changed_entries(old_po, new_po):
             # Don't import black strings
             if not changed_entry.msgstr:
@@ -55,10 +55,10 @@ class Importer:
 
             try:
                 segment = Segment.objects.get(
-                    language=self.source_language, text=changed_entry.msgid
+                    language=self.source_locale.language, text=changed_entry.msgid
                 )
                 translation, created = segment.translations.get_or_create(
-                    language=language,
+                    language=locale.language,
                     context=SegmentTranslationContext.get_from_string(
                         changed_entry.msgctxt
                     )
@@ -80,24 +80,20 @@ class Importer:
             except Segment.DoesNotExist:
                 self.logger.warning(f"Unrecognised segment '{changed_entry.msgid}'")
 
-    def try_update_resource_translation(self, resource, language):
+    def try_update_resource_translation(self, resource, locale):
         # Check if there is a submission ready to be translated
-        translatable_submission = resource.find_translatable_submission(language)
+        translatable_submission = resource.find_translatable_submission(locale)
 
         if translatable_submission:
-            locale = Locale.objects.get(
-                region_id=Region.objects.default_id(), language=language
-            )
-
             for dependency in translatable_submission.get_dependencies():
                 if not dependency.object.has_translation(locale):
                     self.logger.info(
-                        f"Can't translate '{resource.path}' into {language.get_display_name()} because its dependency '{dependency.path}' hasn't been translated yet"
+                        f"Can't translate '{resource.path}' into {locale.language.get_display_name()} because its dependency '{dependency.path}' hasn't been translated yet"
                     )
                     return
 
             self.logger.info(
-                f"Saving translation for '{resource.path}' in {language.get_display_name()}"
+                f"Saving translation for '{resource.path}' in {locale.language.get_display_name()}"
             )
 
             try:
@@ -110,7 +106,7 @@ class Importer:
             except ParentNotTranslatedError:
                 # These pages will be handled when the parent is created in the code below
                 self.logger.info(
-                    f"Cannot save translation for '{resource.path}' in {language.get_display_name()} yet as its parent must be translated first"
+                    f"Cannot save translation for '{resource.path}' in {locale.language.get_display_name()} yet as its parent must be translated first"
                 )
                 return
 
@@ -130,13 +126,13 @@ class Importer:
                     # the dependee submission that's linked to this resource.
                     # This prevents us from translating an old submission that's been replaced.
                     if (
-                        dependee.resource.find_translatable_submission(language)
+                        dependee.resource.find_translatable_submission(locale)
                         != dependee
                     ):
                         continue
 
                     # FIXME: Could we pass in the translatable submission instead?
-                    self.try_update_resource_translation(dependee.resource, language)
+                    self.try_update_resource_translation(dependee.resource, locale)
 
                 # If a page was created, check to see if it has any children that are
                 # now ready to translate.
@@ -152,7 +148,7 @@ class Importer:
                     )
 
                     for resource in child_page_resources:
-                        self.try_update_resource_translation(resource, language)
+                        self.try_update_resource_translation(resource, locale)
 
     def start_import(self, commit_id):
         self.log = PontoonSyncLog.objects.create(
@@ -161,17 +157,17 @@ class Importer:
 
     def import_file(self, filename, old_content, new_content):
         self.logger.info(f"Pull: Importing changes in file '{filename}'")
-        resource, language = PontoonResource.get_by_po_filename(filename)
+        resource, locale = PontoonResource.get_by_po_filename(filename)
 
         # Log that this resource was updated
         PontoonSyncLogResource.objects.create(
-            log=self.log, resource=resource, language=language
+            log=self.log, resource=resource, locale=locale
         )
 
         old_po = polib.pofile(old_content.decode("utf-8"))
         new_po = polib.pofile(new_content.decode("utf-8"))
 
-        self.import_resource(resource, language, old_po, new_po)
+        self.import_resource(resource, locale, old_po, new_po)
 
         # Check if the translated page is ready to be created/updated
-        self.try_update_resource_translation(resource, language)
+        self.try_update_resource_translation(resource, locale)

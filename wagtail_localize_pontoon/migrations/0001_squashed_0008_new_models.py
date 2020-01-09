@@ -84,12 +84,12 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "language",
+                    "locale",
                     models.ForeignKey(
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="+",
-                        to="wagtail_localize.Language",
+                        to="wagtail_localize.Locale",
                     ),
                 ),
                 (

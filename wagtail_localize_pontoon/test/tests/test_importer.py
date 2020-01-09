@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from wagtail.core.models import Page
-from wagtail_localize.models import Language
+from wagtail_localize.models import Language, Locale
 from wagtail_localize.test.models import TestPage, TestSnippet
 
 from wagtail_localize_pontoon.importer import Importer
@@ -46,7 +46,8 @@ class TestImporter(TestCase):
             object__translation_key=self.page.translation_key
         )
 
-        self.language = Language.objects.create(code="fr-FR")
+        Language.objects.create(code="fr-FR")
+        self.locale = Locale.objects.get(language__code="fr-FR")
 
     def test_importer(self):
         new_page_succeeded = False
@@ -72,14 +73,14 @@ class TestImporter(TestCase):
                 ]
             ).encode("utf-8")
 
-            importer = Importer(Language.objects.default(), logging.getLogger("dummy"))
+            importer = Importer(Locale.objects.default(), logging.getLogger("dummy"))
             importer.start_import("0" * 40)
             importer.import_file(
-                self.resource.get_po_filename(language=self.language), po_v1, po_v2
+                self.resource.get_po_filename(locale=self.locale), po_v1, po_v2
             )
 
             # Check translated page was created
-            translated_page = TestPage.objects.get(locale__language=self.language)
+            translated_page = TestPage.objects.get(locale=self.locale)
             self.assertEqual(translated_page.translation_key, self.page.translation_key)
             self.assertFalse(translated_page.is_source_translation)
             self.assertEqual(
@@ -96,7 +97,7 @@ class TestImporter(TestCase):
             self.assertEqual(log.commit_id, "0" * 40)
             log_resource = log.resources.get()
             self.assertEqual(log_resource.resource, self.resource)
-            self.assertEqual(log_resource.language, self.language)
+            self.assertEqual(log_resource.locale, self.locale)
 
             new_page_succeeded = True
 
@@ -118,10 +119,10 @@ class TestImporter(TestCase):
                 ]
             ).encode("utf-8")
 
-            importer = Importer(Language.objects.default(), logging.getLogger("dummy"))
+            importer = Importer(Locale.objects.default(), logging.getLogger("dummy"))
             importer.start_import("0" * 39 + "1")
             importer.import_file(
-                self.resource.get_po_filename(language=self.language), po_v2, po_v3
+                self.resource.get_po_filename(locale=self.locale), po_v2, po_v3
             )
 
             translated_page.refresh_from_db()
@@ -142,7 +143,7 @@ class TestImporter(TestCase):
             self.assertEqual(log.commit_id, "0" * 39 + "1")
             log_resource = log.resources.get()
             self.assertEqual(log_resource.resource, self.resource)
-            self.assertEqual(log_resource.language, self.language)
+            self.assertEqual(log_resource.locale, self.locale)
 
     def test_importer_doesnt_import_if_parent_not_translated(self):
         child_page = create_test_page(
@@ -180,16 +181,16 @@ class TestImporter(TestCase):
                 ]
             ).encode("utf-8")
 
-            importer = Importer(Language.objects.default(), logging.getLogger("dummy"))
+            importer = Importer(Locale.objects.default(), logging.getLogger("dummy"))
             importer.start_import("0" * 40)
             importer.import_file(
-                child_resource.get_po_filename(language=self.language), po_v1, po_v2
+                child_resource.get_po_filename(locale=self.locale), po_v1, po_v2
             )
 
             # Check translated page was not created
             self.assertFalse(
                 child_page.get_translations()
-                .filter(locale__language=self.language)
+                .filter(locale=self.locale)
                 .exists()
             )
 
@@ -199,7 +200,7 @@ class TestImporter(TestCase):
             self.assertEqual(log.commit_id, "0" * 40)
             log_resource = log.resources.get()
             self.assertEqual(log_resource.resource, child_resource)
-            self.assertEqual(log_resource.language, self.language)
+            self.assertEqual(log_resource.locale, self.locale)
 
             create_child_page_succeeded = True
 
@@ -229,15 +230,15 @@ class TestImporter(TestCase):
                 ]
             ).encode("utf-8")
 
-            importer = Importer(Language.objects.default(), logging.getLogger("dummy"))
+            importer = Importer(Locale.objects.default(), logging.getLogger("dummy"))
             importer.start_import("0" * 39 + "1")
             importer.import_file(
-                self.resource.get_po_filename(language=self.language), po_v1, po_v2
+                self.resource.get_po_filename(locale=self.locale), po_v1, po_v2
             )
 
             # Check both translated pages were created
             translated_parent = self.page.get_translations().get(
-                locale__language=self.language
+                locale=self.locale
             )
             self.assertEqual(
                 translated_parent.translation_key, self.page.translation_key
@@ -252,7 +253,7 @@ class TestImporter(TestCase):
             )
 
             translated_child = child_page.get_translations().get(
-                locale__language=self.language
+                locale=self.locale
             )
             self.assertEqual(
                 translated_child.translation_key, child_page.translation_key
@@ -272,7 +273,7 @@ class TestImporter(TestCase):
             self.assertEqual(log.commit_id, "0" * 39 + "1")
             log_resource = log.resources.get()
             self.assertEqual(log_resource.resource, self.resource)
-            self.assertEqual(log_resource.language, self.language)
+            self.assertEqual(log_resource.locale, self.locale)
 
     def test_importer_doesnt_import_if_dependency_not_translated(self):
         self.page.test_snippet = TestSnippet.objects.create(field="Test content")
@@ -303,17 +304,15 @@ class TestImporter(TestCase):
                 ]
             ).encode("utf-8")
 
-            importer = Importer(Language.objects.default(), logging.getLogger("dummy"))
+            importer = Importer(Locale.objects.default(), logging.getLogger("dummy"))
             importer.start_import("0" * 40)
             importer.import_file(
-                self.resource.get_po_filename(language=self.language), po_v1, po_v2
+                self.resource.get_po_filename(locale=self.locale), po_v1, po_v2
             )
 
             # Check translated page was not created
             self.assertFalse(
-                self.page.get_translations()
-                .filter(locale__language=self.language)
-                .exists()
+                self.page.get_translations().filter(locale=self.locale).exists()
             )
 
             # Check log
@@ -322,7 +321,7 @@ class TestImporter(TestCase):
             self.assertEqual(log.commit_id, "0" * 40)
             log_resource = log.resources.get()
             self.assertEqual(log_resource.resource, self.resource)
-            self.assertEqual(log_resource.language, self.language)
+            self.assertEqual(log_resource.locale, self.locale)
 
             new_page_succeeded = True
 
@@ -352,14 +351,14 @@ class TestImporter(TestCase):
                 ]
             ).encode("utf-8")
 
-            importer = Importer(Language.objects.default(), logging.getLogger("dummy"))
+            importer = Importer(Locale.objects.default(), logging.getLogger("dummy"))
             importer.start_import("0" * 39 + "1")
             importer.import_file(
-                snippet_resource.get_po_filename(language=self.language), po_v1, po_v2
+                snippet_resource.get_po_filename(locale=self.locale), po_v1, po_v2
             )
 
             # Check translated snippet was created
-            translated_snippet = TestSnippet.objects.get(locale__language=self.language)
+            translated_snippet = TestSnippet.objects.get(locale=self.locale)
             self.assertEqual(
                 translated_snippet.translation_key,
                 self.page.test_snippet.translation_key,
@@ -368,7 +367,7 @@ class TestImporter(TestCase):
             self.assertEqual(translated_snippet.field, "Tester le contenu")
 
             # Check the translated page was created and linked to the translated snippet
-            translated_page = TestPage.objects.get(locale__language=self.language)
+            translated_page = TestPage.objects.get(locale=self.locale)
             self.assertEqual(translated_page.test_snippet, translated_snippet)
 
             # Check log
@@ -377,7 +376,7 @@ class TestImporter(TestCase):
             self.assertEqual(log.commit_id, "0" * 39 + "1")
             log_resource = log.resources.get()
             self.assertEqual(log_resource.resource, snippet_resource)
-            self.assertEqual(log_resource.language, self.language)
+            self.assertEqual(log_resource.locale, self.locale)
 
 
 class TestImporterRichText(TestCase):
@@ -391,7 +390,8 @@ class TestImporterRichText(TestCase):
             object__translation_key=self.page.translation_key
         )
 
-        self.language = Language.objects.create(code="fr-FR")
+        Language.objects.create(code="fr-FR")
+        self.locale = Locale.objects.get(language__code="fr-FR")
 
     def test_importer_rich_text(self):
         po_v1 = create_test_po(
@@ -414,14 +414,14 @@ class TestImporterRichText(TestCase):
             ]
         ).encode("utf-8")
 
-        importer = Importer(Language.objects.default(), logging.getLogger("dummy"))
+        importer = Importer(Locale.objects.default(), logging.getLogger("dummy"))
         importer.start_import("0" * 40)
         importer.import_file(
-            self.resource.get_po_filename(language=self.language), po_v1, po_v2
+            self.resource.get_po_filename(locale=self.locale), po_v1, po_v2
         )
 
         # Check translated page was created
-        translated_page = TestPage.objects.get(locale__language=self.language)
+        translated_page = TestPage.objects.get(locale=self.locale)
         self.assertEqual(translated_page.translation_key, self.page.translation_key)
         self.assertFalse(translated_page.is_source_translation)
 
