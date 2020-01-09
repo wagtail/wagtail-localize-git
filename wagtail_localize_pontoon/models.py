@@ -222,7 +222,7 @@ class PontoonResource(models.Model):
 class PontoonSyncLogResourceQuerySet(models.QuerySet):
     def unique_resources(self):
         return PontoonResource.objects.filter(
-            page_id__in=self.values_list("resource_id", flat=True)
+            object_id__in=self.values_list("resource_id", flat=True)
         )
 
     def unique_locales(self):
