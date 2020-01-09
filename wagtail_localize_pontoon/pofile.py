@@ -14,7 +14,7 @@ def generate_source_pofile(resource):
     }
 
     for segment in (
-        resource.get_segments().select_related("segment", "context").iterator()
+        resource.get_segments().select_related("segment", "context").order_by("order").iterator()
     ):
         po.append(
             polib.POEntry(
@@ -43,6 +43,7 @@ def generate_locale_pofile(resource, locale):
     for segment in (
         resource.get_segments()
         .select_related("segment", "context")
+        .order_by("order")
         .annotate_translation(locale.language)
         .iterator()
     ):
