@@ -21,7 +21,6 @@
         <table style="width: 100%;">
             <thead>
                 <th>Filename</th>
-                <th>Source Page</th>
                 <th>Last updated</th>
                 <th>Last pushed</th>
                 <th>Requires sync</th>
@@ -31,7 +30,6 @@
                 {% with resource.latest_submission as latest_submission %}
                     <tr>
                         <td>{{ resource.path }}.pot</td>
-                        <td><a href="{% url 'wagtailadmin_pages:edit' resource.page_id %}">{{ resource.page.get_admin_display_title }}</a></td>
                         <td>{{ resource.latest_submission.created_at }}</td>
                         <td>{{ resource.latest_pushed_submission.pushed_at }}</td>
                         <td>
@@ -59,7 +57,7 @@
                         {% elif log.action == log.ACTION_PULL %}
                             Pulled
                             {{ log.resources.unique_resources.count }} resources
-                            in {{ log.resources.unique_languages.count }} languages
+                            in {{ log.resources.unique_locales.count }} locales
                         {% endif %}
                     </li>
                 {% endif %}
