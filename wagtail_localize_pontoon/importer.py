@@ -23,7 +23,6 @@ from wagtail_localize.translation.models import (
 
 from .models import (
     PontoonResource,
-    PontoonResourceTranslation,
     PontoonSyncLog,
     PontoonSyncLogResource,
 )
@@ -107,10 +106,6 @@ class Importer:
                     created,
                 ) = translatable_submission.revision.create_or_update_translation(
                     locale
-                )
-
-                PontoonResourceTranslation.objects.create(
-                    submission=translatable_submission, language=language
                 )
             except ParentNotTranslatedError:
                 # These pages will be handled when the parent is created in the code below

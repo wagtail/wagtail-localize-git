@@ -86,7 +86,8 @@ class TestImporter(TestCase):
                 translated_page.test_charfield, "Le champ traduisible de test"
             )
             self.assertEqual(
-                translated_page.test_synchronized_charfield, "The test synchronized field"
+                translated_page.test_synchronized_charfield,
+                "The test synchronized field",
             )
 
             # Check log
@@ -131,7 +132,8 @@ class TestImporter(TestCase):
                 "Le champ testable à traduire avec un contenu mis à jour",
             )
             self.assertEqual(
-                translated_page.test_synchronized_charfield, "The test synchronized field"
+                translated_page.test_synchronized_charfield,
+                "The test synchronized field",
             )
 
             # Check log
@@ -245,7 +247,8 @@ class TestImporter(TestCase):
                 translated_parent.test_charfield, "Le champ traduisible de test"
             )
             self.assertEqual(
-                translated_parent.test_synchronized_charfield, "The test synchronized field"
+                translated_parent.test_synchronized_charfield,
+                "The test synchronized field",
             )
 
             translated_child = child_page.get_translations().get(
@@ -259,7 +262,8 @@ class TestImporter(TestCase):
                 translated_child.test_charfield, "Le champ traduisible de test"
             )
             self.assertEqual(
-                translated_child.test_synchronized_charfield, "The test synchronized field"
+                translated_child.test_synchronized_charfield,
+                "The test synchronized field",
             )
 
             # Check log

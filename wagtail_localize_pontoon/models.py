@@ -18,6 +18,7 @@ from wagtail_localize.translation.models import (
     TranslatableRevision,
     RelatedObjectLocation,
     SegmentTranslation,
+    TranslationLog,
 )
 from wagtail_localize.translation.utils import (
     insert_segments,
@@ -38,7 +39,7 @@ class PontoonSyncLog(models.Model):
 
 class PontoonResource(models.Model):
     object = models.OneToOneField(
-        "wagtail_localize_translation_memory.TranslatableObject",
+        "wagtail_localize_translation.TranslatableObject",
         on_delete=models.CASCADE,
         primary_key=True,
         related_name="+",
@@ -51,7 +52,7 @@ class PontoonResource(models.Model):
     # The last revision to be submitted for translation
     # This is denormalised from the revision field of the latest submission for this resource
     current_revision = models.OneToOneField(
-        "wagtail_localize_translation_memory.TranslatableRevision",
+        "wagtail_localize_translation.TranslatableRevision",
         on_delete=models.SET_NULL,
         null=True,
         related_name="+",
@@ -158,7 +159,11 @@ class PontoonResource(models.Model):
                     context_id=OuterRef("context_id"),
                 )
             )
-        ).filter(language=language, is_in_latest_submission=False, context__object_id=self.object_id)
+        ).filter(
+            language=language,
+            is_in_latest_submission=False,
+            context__object_id=self.object_id,
+        )
 
     def find_translatable_submission(self, language):
         """
@@ -252,8 +257,8 @@ class PontoonResourceSubmissionQuerySet(models.QuerySet):
         """
         return self.annotate(
             is_translated=Exists(
-                PontoonResourceTranslation.objects.filter(
-                    submission_id=OuterRef("pk"), language=language
+                TranslationLog.objects.filter(
+                    revision_id=OuterRef("revision_id"), language=language
                 )
             )
         )
@@ -265,7 +270,7 @@ class PontoonResourceSubmission(models.Model):
     )
 
     revision = models.OneToOneField(
-        "wagtail_localize_translation_memory.TranslatableRevision",
+        "wagtail_localize_translation.TranslatableRevision",
         on_delete=models.CASCADE,
         related_name="pontoon_submission",
     )
@@ -304,23 +309,6 @@ class PontoonResourceSubmission(models.Model):
                 revision_id=self.revision_id
             ).values_list("object_id", flat=True)
         )
-
-
-class PontoonResourceTranslation(models.Model):
-    """
-    Represents a translation that was sucessfully carried out by pontoon.
-    """
-
-    submission = models.ForeignKey(
-        PontoonResourceSubmission, on_delete=models.CASCADE, related_name="translations"
-    )
-    language = models.ForeignKey(
-        "wagtail_localize.Language",
-        on_delete=models.CASCADE,
-        related_name="pontoon_translations",
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
 
 
 @transaction.atomic
