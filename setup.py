@@ -35,7 +35,7 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     install_requires=[
-        "wagtail_localize==0.3.3",
+        "wagtail_localize>=0.4,<0.5",
         "polib>=1.1,<2.0",
         "pygit2>=1.0,<2.0",
         "gitpython>=3.0,<4.0",
