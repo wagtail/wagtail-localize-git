@@ -15,7 +15,7 @@ except ImportError:
 
 setup(
     name="wagtail-localize-pontoon",
-    version="0.1.4",
+    version="0.2",
     description="Pontoon integration for Wagtail Localize",
     author="Karl Hobley",
     author_email="karl@torchbox.com",
