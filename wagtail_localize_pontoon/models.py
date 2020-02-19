@@ -391,5 +391,14 @@ def submit_page_to_pontoon_on_publish(sender, **kwargs):
         page = kwargs["instance"]
         page_revision = kwargs["revision"]
 
+        # If the class has an attribute or method called `submit_to_pontoon_on_publish`,
+        # use it to check if this page can be auto-submitted to Pontoon.
+        # Otherwise, assume yes.
+        submit = getattr(page, "submit_to_pontoon_on_publish", True)
+        if callable(submit):
+            submit = submit()
+        if not submit:
+            return
+
         if page.locale_id == Locale.objects.default_id():
             submit_page_to_pontoon(page_revision)
