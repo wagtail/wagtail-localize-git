@@ -58,4 +58,3 @@ class AutoSubmitTestCase(TestCase):
             delattr(TestPage, "submit_to_pontoon_on_publish")
 
         self.assert_not_submitted(page)
-git
