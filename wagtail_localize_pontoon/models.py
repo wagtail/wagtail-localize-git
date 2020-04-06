@@ -190,11 +190,9 @@ class PontoonResource(models.Model):
             )
 
         for submission in submissions_to_check:
-            total_segments, translated_segments = submission.get_translation_progress(
-                locale.language
-            )
+            translation_progress = submission.get_translation_progress(locale.language)
 
-            if translated_segments == total_segments:
+            if translation_progress.is_ready():
                 return submission
 
     def latest_submission(self):
@@ -344,7 +342,14 @@ def submit_to_pontoon(instance):
     resource.save(update_fields=["current_revision"])
 
     # Create submission
-    resource.submissions.create(revision=revision)
+    submission = resource.submissions.create(revision=revision)
+
+    # Check if submission is ready for translation into any locales
+    for locale in Locale.objects.filter(is_active=True):
+        translation_progress = submission.get_translation_progress(locale)
+
+        if translation_progress.is_ready():
+            submission.revision.create_or_update_translation(locale)
 
 
 @transaction.atomic
@@ -382,7 +387,14 @@ def submit_page_to_pontoon(page_revision):
     resource.save(update_fields=["current_revision"])
 
     # Create submission
-    resource.submissions.create(revision=revision)
+    submission = resource.submissions.create(revision=revision)
+
+    # Check if submission is ready for translation into any locales
+    for locale in Locale.objects.filter(is_active=True):
+        translation_progress = submission.get_translation_progress(locale)
+
+        if translation_progress.is_ready():
+            submission.revision.create_or_update_translation(locale)
 
 
 @receiver(page_published)

@@ -85,13 +85,6 @@ class Importer:
         translatable_submission = resource.find_translatable_submission(locale)
 
         if translatable_submission:
-            for dependency in translatable_submission.get_dependencies():
-                if not dependency.object.has_translation(locale):
-                    self.logger.info(
-                        f"Can't translate '{resource.path}' into {locale.language.get_display_name()} because its dependency '{dependency.path}' hasn't been translated yet"
-                    )
-                    return
-
             self.logger.info(
                 f"Saving translation for '{resource.path}' in {locale.language.get_display_name()}"
             )
