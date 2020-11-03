@@ -1,5 +1,3 @@
-## THIS PROJECT HAS BEEN RENAMED: https://github.com/wagtail/wagtail-localize-git
-
 # wagtail-localize-pontoon
 
 Use [Pontoon](https://pontoon.mozilla.org/) as a translation engine for [wagtail-localize](https://github.com/kaedroho/wagtail-localize).
