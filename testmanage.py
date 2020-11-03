@@ -8,7 +8,8 @@ import warnings
 
 from django.core.management import execute_from_command_line
 
-os.environ["DJANGO_SETTINGS_MODULE"] = "wagtail_localize_pontoon.test.settings"
+
+os.environ["DJANGO_SETTINGS_MODULE"] = "wagtail_localize_git.test.settings"
 
 
 def make_parser():

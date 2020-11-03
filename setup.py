@@ -14,9 +14,9 @@ except ImportError:
 
 
 setup(
-    name="wagtail-localize-pontoon",
-    version="0.2.1",
-    description="Pontoon integration for Wagtail Localize",
+    name="wagtail-localize-git",
+    version="0.1",
+    description="Wagtail Localize integration for Git-based translation services",
     author="Karl Hobley",
     author_email="karl@torchbox.com",
     url="",
@@ -30,17 +30,24 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Framework :: Django",
+        "Framework :: Django :: 2.2",
+        "Framework :: Django :: 3.0",
+        "Framework :: Django :: 3.1",
+        "Framework :: Wagtail",
+        "Framework :: Wagtail :: 2",
     ],
     install_requires=[
-        "wagtail_localize>=0.4,<0.5",
-        "polib>=1.1,<2.0",
+        "Django>=2.2,<3.2",
+        "Wagtail>=2.11,<2.12",
         "pygit2>=1.0,<2.0",
         "gitpython>=3.0,<4.0",
-        "toml>=0.10,<0.11",
+        "toml>=0.10,<0.11"
     ],
-    extras_require={"testing": ["dj-database-url==0.5.0",],},
+    extras_require={
+        "testing": ["dj-database-url==0.5.0", "freezegun==0.3.15"],
+    },
     zip_safe=False,
 )
