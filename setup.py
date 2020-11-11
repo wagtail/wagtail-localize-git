@@ -6,8 +6,6 @@ from setuptools import find_packages, setup
 
 from wagtail_localize_git import __version__
 
-from setuptools import setup, find_packages
-
 # Hack to prevent "TypeError: 'NoneType' object is not callable" error
 # in multiprocessing/util.py _exit_function when setup.py exits
 # (see http://www.eby-sarna.com/pipermail/peak/2010-May/003357.html)
