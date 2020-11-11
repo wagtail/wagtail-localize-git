@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-import sys, os
+from os import path
+
+from setuptools import find_packages, setup
+
+from wagtail_localize_git import __version__
 
 from setuptools import setup, find_packages
 
@@ -12,11 +16,16 @@ try:
 except ImportError:
     pass
 
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 setup(
     name="wagtail-localize-git",
-    version="0.1",
+    version=__version__,
     description="Wagtail Localize integration for Git-based translation services",
+    long_description=long_description,
+    long_description_format='text/markdown',
     author="Karl Hobley",
     author_email="karl@torchbox.com",
     url="",
