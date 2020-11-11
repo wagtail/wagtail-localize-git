@@ -25,7 +25,7 @@ setup(
     version=__version__,
     description="Wagtail Localize integration for Git-based translation services",
     long_description=long_description,
-    long_description_format='text/markdown',
+    long_description_content_type='text/markdown',
     author="Karl Hobley",
     author_email="karl@torchbox.com",
     url="",
