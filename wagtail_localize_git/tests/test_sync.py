@@ -226,6 +226,7 @@ class TestPush(TestCase):
                 (
                     PurePosixPath("templates/pages/test-page.pot"),
                     PurePosixPath(r"locales/{locale}/pages/test-page.po"),
+                    [self.locale_fr]
                 )
             ],
         )

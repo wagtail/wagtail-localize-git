@@ -124,8 +124,8 @@ class RepositoryWriter:
                 {
                     "locales": languages,
                     "paths": [
-                        {"reference": str(source_path), "l10n": str(locale_path)}
-                        for source_path, locale_path in paths
+                        {"reference": str(source_path), "l10n": str(locale_path), "locales": [locale.language_code for locale in locales]}
+                        for source_path, locale_path, locales in paths
                     ],
                 }
             ),
