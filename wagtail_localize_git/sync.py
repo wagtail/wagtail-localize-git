@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from pathlib import PurePosixPath
 
 import polib
@@ -95,10 +96,10 @@ def _push(repo, logger):
         id=source_locale.id
     )
 
-    paths = []
+    paths = defaultdict(list)
     for translation in (
         Translation.objects.filter(source__locale=source_locale, target_locale__in=target_locales)
-        .select_related("source")
+        .select_related("source", "target_locale")
     ):
         resource = Resource.get_for_object(translation.source.object)
 
@@ -111,12 +112,12 @@ def _push(repo, logger):
             str(po_filename_for_object(resource, target_locale=translation.target_locale)), locale_po
         )
 
-        paths.append(
-            (
-                source_po_filename,
-                locale_po_filename_template_for_object(resource)
-            )
-        )
+        paths[(source_po_filename, locale_po_filename_template_for_object(resource))].append(translation.target_locale)
+
+    paths = [
+        (source_filename, locale_filename, locales)
+        for (source_filename, locale_filename), locales in paths.items()
+    ]
 
     writer.write_config(
         [locale.language_code for locale in target_locales], paths  # TODO as_rfc5646_language_tag

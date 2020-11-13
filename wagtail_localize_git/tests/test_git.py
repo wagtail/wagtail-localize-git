@@ -5,6 +5,7 @@ from unittest import mock
 import toml
 import pygit2
 from django.test import TestCase, override_settings
+from wagtail.core.models import Locale
 
 from wagtail_localize_git.git import Repository, RepositoryReader, RepositoryWriter
 
@@ -231,7 +232,7 @@ class TestRepositoryWriter(GitTestCase):
 
         writer.write_config(
             ["en", "de", "fr"],
-            [("templates/mytemplate.pot", "locales/de/mytranslation.po")],
+            [("templates/mytemplate.pot", r"locales/{locale}/mytranslation.po", [Locale.objects.get(language_code="en")])],
         )
 
         writer.commit("Wrote config")
@@ -244,8 +245,9 @@ class TestRepositoryWriter(GitTestCase):
                     "locales": ["en", "de", "fr"],
                     "paths": [
                         {
-                            "l10n": "locales/de/mytranslation.po",
+                            "l10n": r"locales/{locale}/mytranslation.po",
                             "reference": "templates/mytemplate.pot",
+                            "locales": ["en"]
                         }
                     ],
                 },
