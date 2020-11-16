@@ -156,7 +156,7 @@ STATICFILES_DIRS = [os.path.join(PROJECT_DIR, "static")]
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect_static")
 STATIC_URL = "/static/"
 
-MEDIA_ROOT = os.path.join(PROJECT_DIR, "media")
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 
 # Wagtail settings
