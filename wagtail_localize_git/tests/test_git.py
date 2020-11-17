@@ -72,7 +72,8 @@ class TestRepositoryClonePullPush(GitTestCase):
         PyGitRepository.assert_called_with(empty_dir.name)
         Repo.assert_called_with(empty_dir.name)
 
-        empty_dir.cleanup()
+        # Normally, this operation would create the dir, but we've mocked out Repo.clone_from so that won't happen
+        # empty_dir.cleanup()
 
     def test_pull(self, Repo, PyGitRepository):
         self.repo.gitpython = mock.MagicMock()
