@@ -10,7 +10,7 @@ from wagtail.tests.utils import WagtailTestUtils
 from wagtail_localize.models import Translation, TranslationSource
 from wagtail_localize.test.models import TestPage
 
-from wagtail_localize_git.models import Resource
+from wagtail_localize_git.models import Resource, SyncLog, SyncLogResource
 
 
 def create_test_page(**kwargs):
@@ -37,6 +37,12 @@ class TestDashboardView(WagtailTestUtils, TestCase):
             target_locale=self.locale_fr,
         )
         self.resource = Resource.get_for_object(self.source.object)
+
+        self.push_sync_log = SyncLog.objects.create(action=SyncLog.ACTION_PUSH)
+        self.push_sync_log_resource = SyncLogResource.objects.create(log=self.push_sync_log, resource=self.resource, source=self.source)
+
+        self.pull_sync_log = SyncLog.objects.create(action=SyncLog.ACTION_PULL)
+        self.pull_sync_log_resource = SyncLogResource.objects.create(log=self.pull_sync_log, resource=self.resource, locale=self.locale_fr, source=self.source)
 
         self.login()
         self.user = get_user_model().objects.get()

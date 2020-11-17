@@ -33,9 +33,8 @@
                             {% for locale, translation, log in locales %}
                                 <td>{{ locale }}</td>
                                 <td>
-                                    <a href="{% url 'wagtail_localize_translation_management:detail' translation.id %}" target="_blank">
-                                        {{ translation.get_status_display }}
-                                    </a>
+                                    {# TODO link to the edit view #}
+                                    {{ translation.get_status_display }}
                                 </td>
                                 <td>{{ log.log.time }}</td>
                                 </tr>
