@@ -14,7 +14,6 @@ jobs:
       - image: circleci/python:3.8
     steps:
       - checkout
-      - run: git clone git@github.com:wagtail/wagtail-localize.git
 
       - type: cache-restore
         keys:
@@ -22,7 +21,6 @@ jobs:
          - pip-master-
 
       - run: pip install -e .[testing]
-      - run: pip install ./wagtail-localize
 
       - type: cache-save
         key: pip-{{ .Branch }}-{{ epoch }}
