@@ -49,6 +49,7 @@ setup(
     install_requires=[
         "Django>=2.2,<3.2",
         "Wagtail>=2.11,<2.12",
+        "wagtail-localize>=0.9,<=1.1",
         "pygit2>=1.0,<2.0",
         "gitpython>=3.0,<4.0",
         "toml>=0.10,<0.11"
