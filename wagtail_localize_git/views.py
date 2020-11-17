@@ -18,7 +18,7 @@ def dashboard(request):
                 (resource, [
                     (
                         locale,
-                        Translation.objects.filter(object_id=resource.object_id, target_locale=locale).first(),
+                        Translation.objects.filter(source__object_id=resource.object_id, target_locale=locale).first(),
                         SyncLogResource.objects.filter(resource=resource, locale=locale).last(),
                     )
 
