@@ -100,6 +100,7 @@ def _push(repo, logger):
     for translation in (
         Translation.objects.filter(source__locale=source_locale, target_locale__in=target_locales, enabled=True)
         .select_related("source", "target_locale")
+        .order_by("target_locale__language_code")
     ):
         resource = Resource.get_for_object(translation.source.object)
 
