@@ -98,7 +98,7 @@ def _push(repo, logger):
 
     paths = defaultdict(list)
     for translation in (
-        Translation.objects.filter(source__locale=source_locale, target_locale__in=target_locales)
+        Translation.objects.filter(source__locale=source_locale, target_locale__in=target_locales, enabled=True)
         .select_related("source", "target_locale")
     ):
         resource = Resource.get_for_object(translation.source.object)
