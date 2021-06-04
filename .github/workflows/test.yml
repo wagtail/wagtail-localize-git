@@ -13,12 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - toxenv: py38-dj22-wa211-sqlite
-            python: 3.8
-          - toxenv: py38-dj31-wa211-sqlite
-            python: 3.8
-
+        python: ['3.8']
+        django: ['2.2', '3.1']
+        wagtail: ['2.11', '2.12', '2.13']
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python }}
@@ -32,29 +29,19 @@ jobs:
         run: |
           tox
         env:
-          TOXENV: ${{ matrix.toxenv }}
+          TOXENV: python${{ matrix.python }}-django${{ matrix.django }}-wagtail${{ matrix.wagtail }}-sqlite
 
   test-postgres:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - toxenv: py37-dj22-wa211-postgres
-            python: 3.7
-          - toxenv: py38-dj22-wa211-postgres
-            python: 3.8
-          - toxenv: py37-dj30-wa211-postgres
-            python: 3.7
-          - toxenv: py38-dj30-wa211-postgres
-            python: 3.8
-          - toxenv: py38-dj31-wa211-postgres
-            python: 3.8
-          - toxenv: py38-dj31-wamaster-postgres
-            python: 3.8
-
+        python: ['3.8']
+        django: ['2.2', '3.1']
+        wagtail: ['2.11', '2.12', '2.13']
+        postgres: ['10.8']
     services:
       postgres:
-        image: postgres:10.8
+        image: postgres:${{ matrix.postgres }}
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -73,4 +60,4 @@ jobs:
           tox
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/wagtail_localize_git
-          TOXENV: ${{ matrix.toxenv }}
+          TOXENV: python${{ matrix.python }}-django${{ matrix.django }}-wagtail${{ matrix.wagtail }}-postgres
