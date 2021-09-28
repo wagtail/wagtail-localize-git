@@ -13,5 +13,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - [Support for Wagtail 2.14](https://github.com/wagtail/wagtail-localize-git/pull/15)
 
-[unreleased]: https://github.com/wagtail/wagtail-localize-git/compare/v0.10...HEAD
-[0.10]: https://github.com/wagtail/wagtail-localize-git/compare/v0.9.3...v0.10
+[unreleased]: https://github.com/wagtail/wagtail-localize-git/compare/v0.10.0...HEAD
+[0.10]: https://github.com/wagtail/wagtail-localize-git/compare/v0.9.3...v0.10.0
