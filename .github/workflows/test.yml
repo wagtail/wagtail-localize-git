@@ -47,6 +47,7 @@ jobs:
           - python: '3.8'
             django: '3.2'
             wagtail: '2.13'
+            postgres: '10.8'
           - python: '3.8'
             django: '3.2'
             wagtail: '2.15'
