@@ -46,7 +46,7 @@ jobs:
         include:
           - python: '3.8'
             django: '3.2'
-            wagtail: '2.13'
+            wagtail: '2.14'
             postgres: '10.8'
           - python: '3.8'
             django: '3.2'
