@@ -16,6 +16,10 @@ jobs:
         python: ['3.8']
         django: ['2.2', '3.1']
         wagtail: ['2.11', '2.12', '2.13', '2.14']
+        exclude:
+          # Exclude tests of Django 2.2 and Wagtail 2.14 together
+          - django: '2.2'
+            wagtail: '2.14'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python }}
