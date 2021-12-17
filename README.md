@@ -84,3 +84,5 @@ tox
 
 or, you can run them for a specific environment `tox -e python3.9-django3.2-wagtail2.15` or specific test
 `tox -e python3.9-django3.2-wagtail2.15-sqlite wagtail_localize_git.tests.test_git.TestRepository`
+
+To run the test app interactively, use `tox -e interactive`, visit `http://127.0.0.1:8020/admin/` and log in with `admin`/`changeme`.
