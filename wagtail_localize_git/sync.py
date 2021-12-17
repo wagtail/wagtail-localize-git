@@ -1,8 +1,10 @@
 import logging
+
 from collections import defaultdict
 from pathlib import PurePosixPath
 
 import polib
+
 from django.conf import settings
 from django.db import transaction
 from django.utils.module_loading import import_string
@@ -11,8 +13,8 @@ from wagtail.core.models import Locale
 from wagtail_localize.models import Translation
 
 from .git import Repository
-from .models import SyncLog, Resource
 from .importer import Importer
+from .models import Resource, SyncLog
 
 
 @transaction.atomic
@@ -30,12 +32,14 @@ def _pull(repo, logger):
         return
 
     importer = Importer(current_commit_id, logger)
-    for filename, old_content, new_content in repo.get_changed_files(
+    for filename, _old_content, new_content in repo.get_changed_files(
         last_commit_id, current_commit_id
     ):
         logger.info(f"Pull: Importing changes in file '{filename}'")
         po = polib.pofile(new_content.decode("utf-8"))
-        translation = Translation.objects.get(uuid=po.metadata['X-WagtailLocalize-TranslationID'])
+        translation = Translation.objects.get(
+            uuid=po.metadata["X-WagtailLocalize-TranslationID"]
+        )
         importer.import_resource(translation, po)
 
 
@@ -53,7 +57,9 @@ def po_filename_for_object(resource, target_locale=None):
     else:
         base_path = PurePosixPath("templates")
 
-    return (base_path / str(resource.path)).with_suffix(".pot" if target_locale is None else ".po")
+    return (base_path / str(resource.path)).with_suffix(
+        ".pot" if target_locale is None else ".po"
+    )
 
 
 def locale_po_filename_template_for_object(resource):
@@ -84,21 +90,21 @@ def _push(repo, logger):
                 current_po = polib.pofile(current_po_string, wrapwidth=200)
 
                 # Take metadata from existing PO file
-                translation_id = new_po.metadata.get('X-WagtailLocalize-TranslationID')
+                translation_id = new_po.metadata.get("X-WagtailLocalize-TranslationID")
                 new_po.metadata = current_po.metadata
                 if translation_id:
-                    new_po.metadata['X-WagtailLocalize-TranslationID'] = translation_id
+                    new_po.metadata["X-WagtailLocalize-TranslationID"] = translation_id
 
         writer.write_file(filename, str(new_po))
 
     source_locale = Locale.get_default()
-    target_locales = Locale.objects.exclude(
-        id=source_locale.id
-    )
+    target_locales = Locale.objects.exclude(id=source_locale.id)
 
     paths = defaultdict(list)
     for translation in (
-        Translation.objects.filter(source__locale=source_locale, target_locale__in=target_locales, enabled=True)
+        Translation.objects.filter(
+            source__locale=source_locale, target_locale__in=target_locales, enabled=True
+        )
         .select_related("source", "target_locale")
         .order_by("target_locale__language_code")
     ):
@@ -110,10 +116,17 @@ def _push(repo, logger):
 
         locale_po = translation.export_po()
         update_po(
-            str(po_filename_for_object(resource, target_locale=translation.target_locale)), locale_po
+            str(
+                po_filename_for_object(
+                    resource, target_locale=translation.target_locale
+                )
+            ),
+            locale_po,
         )
 
-        paths[(source_po_filename, locale_po_filename_template_for_object(resource))].append(translation.target_locale)
+        paths[
+            (source_po_filename, locale_po_filename_template_for_object(resource))
+        ].append(translation.target_locale)
 
     paths = [
         (source_filename, locale_filename, locales)
@@ -121,16 +134,15 @@ def _push(repo, logger):
     ]
 
     writer.write_config(
-        [locale.language_code for locale in target_locales], paths  # TODO as_rfc5646_language_tag
+        [locale.language_code for locale in target_locales],
+        paths,  # TODO as_rfc5646_language_tag
     )
 
     if writer.has_changes():
         previous_commit = repo.get_head_commit_id()
 
         # Create a new log for this push
-        log = SyncLog.objects.create(
-            action=SyncLog.ACTION_PUSH, commit_id=""
-        )
+        log = SyncLog.objects.create(action=SyncLog.ACTION_PUSH, commit_id="")
 
         logger.info("Push: Committing changes")
         log.commit_id = writer.commit("Updates to source content")
@@ -139,12 +151,16 @@ def _push(repo, logger):
 
         # Add any resources that have changed to the log
         # This ignores any deletions since we don't care about those
-        for filename, old_content, new_content in repo.get_changed_files(previous_commit, log.commit_id):
+        for _filename, _old_content, new_content in repo.get_changed_files(
+            previous_commit, log.commit_id
+        ):
             # Note: get_changed_files only picks up changes in the locales/ folder so we can assume they're all PO
             # files and they have a Translation ID
             # (anything else that gets in there won't be written into the new commit so, effectively, they get deleted)
             po = polib.pofile(new_content.decode("utf-8"))
-            translation = Translation.objects.get(uuid=po.metadata['X-WagtailLocalize-TranslationID'])
+            translation = Translation.objects.get(
+                uuid=po.metadata["X-WagtailLocalize-TranslationID"]
+            )
             log.add_translation(translation)
 
     else:

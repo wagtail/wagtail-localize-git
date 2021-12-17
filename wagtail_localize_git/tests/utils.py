@@ -1,8 +1,9 @@
-import os
 import io
+import os
 import tempfile
 
 import pygit2
+
 from django.test import override_settings
 from git import Repo
 
@@ -63,10 +64,7 @@ class GitRepositoryUtils:
         return repo.pygit.head.target.hex
 
     def assert_file_in_tree(self, tree, name, mode=33188, check_contents=None):
-        blobs_by_name = {
-            blob.name: blob
-            for blob in tree.blobs
-        }
+        blobs_by_name = {blob.name: blob for blob in tree.blobs}
 
         self.assertIn(name, blobs_by_name)
 
@@ -79,9 +77,6 @@ class GitRepositoryUtils:
             check_contents(contents.getvalue())
 
     def assert_file_not_in_tree(self, tree, name):
-        blobs_by_name = {
-            blob.name: blob
-            for blob in tree.blobs
-        }
+        blobs_by_name = {blob.name: blob for blob in tree.blobs}
 
         self.assertNotIn(name, blobs_by_name)

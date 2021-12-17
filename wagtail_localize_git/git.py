@@ -2,9 +2,9 @@ import pathlib
 
 import pygit2
 import toml
-from git import Repo
 
 from django.conf import settings
+from git import Repo
 
 
 class Repository:
@@ -124,7 +124,11 @@ class RepositoryWriter:
                 {
                     "locales": languages,
                     "paths": [
-                        {"reference": str(source_path), "l10n": str(locale_path), "locales": [locale.language_code for locale in locales]}
+                        {
+                            "reference": str(source_path),
+                            "l10n": str(locale_path),
+                            "locales": [locale.language_code for locale in locales],
+                        }
                         for source_path, locale_path, locales in paths
                     ],
                 }
@@ -158,9 +162,7 @@ class RepositoryWriter:
         )
 
         if self.repo_is_empty:
-            self.repo.create_commit(
-                "HEAD", sig, sig, message, tree, []
-            )
+            self.repo.create_commit("HEAD", sig, sig, message, tree, [])
         else:
             self.repo.create_commit(
                 "refs/heads/master", sig, sig, message, tree, [self.repo.head.target]

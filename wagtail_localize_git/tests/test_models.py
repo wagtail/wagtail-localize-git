@@ -1,12 +1,11 @@
 from django.test import TestCase
 from wagtail.core.models import Page, Site
+from wagtail.documents.models import Document
 from wagtail.images.models import Image
 from wagtail.images.tests.utils import get_test_image_file
-from wagtail.documents.models import Document
 
 from wagtail_localize.models import TranslationSource
 from wagtail_localize.test.models import TestPage, TestSnippet
-
 from wagtail_localize_git.models import Resource
 
 
@@ -31,7 +30,7 @@ class TestResource(TestCase):
         resource = Resource.get_for_object(source.object)
 
         self.assertEqual(resource.object, source.object)
-        self.assertEqual(resource.path, 'pages/test-page')
+        self.assertEqual(resource.path, "pages/test-page")
 
     def test_get_path_for_page(self):
         page, source = create_test_page(
@@ -45,24 +44,29 @@ class TestResource(TestCase):
             parent=page,
         )
 
-        self.assertEqual(Resource.get_path(page), 'pages/test-page')
-        self.assertEqual(Resource.get_path(child_page), 'pages/test-page/child-page')
+        self.assertEqual(Resource.get_path(page), "pages/test-page")
+        self.assertEqual(Resource.get_path(child_page), "pages/test-page/child-page")
 
     def test_get_path_for_snippet(self):
         snippet = TestSnippet.objects.create(field="Foo")
-        self.assertEqual(Resource.get_path(snippet), 'snippets/wagtail_localize_test.TestSnippet/1-testsnippet-object-1')
+        self.assertEqual(
+            Resource.get_path(snippet),
+            "snippets/wagtail_localize_test.TestSnippet/1-testsnippet-object-1",
+        )
 
     def test_get_path_for_image(self):
         image = Image.objects.create(
             title="Test image",
             file=get_test_image_file(),
         )
-        self.assertEqual(Resource.get_path(image), 'images/1-test-image')
+        self.assertEqual(Resource.get_path(image), "images/1-test-image")
 
     def test_get_path_for_document(self):
         doc = Document.objects.create(title="Test document")
-        self.assertEqual(Resource.get_path(doc), 'documents/1-test-document')
+        self.assertEqual(Resource.get_path(doc), "documents/1-test-document")
 
     def test_get_path_for_other_model(self):
         site = Site.objects.get()
-        self.assertEqual(Resource.get_path(site), 'other/wagtailcore.Site/1-localhost-default')
+        self.assertEqual(
+            Resource.get_path(site), "other/wagtailcore.Site/1-localhost-default"
+        )
