@@ -51,7 +51,7 @@ class TestPull(GitRepositoryUtils, TestCase):
     def make_test_repo(self):
         repo_dir, repo = self.make_repo()
         repo.gitpython.index.commit("Initial commit")
-        repo.gitpython.create_head("master")
+        repo.gitpython.create_head("main")
         return repo
 
     def commit_translation(
@@ -301,7 +301,7 @@ class TestSyncManager(GitRepositoryUtils, TestCase):
 
         self.remote_repo_dir, self.remote_repo = self.make_repo()
         self.remote_repo.gitpython.index.commit("Initial commit")
-        self.remote_repo.gitpython.create_head("master")
+        self.remote_repo.gitpython.create_head("main")
         self.local_repo_dir, self.local_repo = self.clone_repo(self.remote_repo_dir)
 
         self.settings = {

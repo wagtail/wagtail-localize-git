@@ -9,7 +9,12 @@ import toml
 from django.test import TestCase, override_settings
 from wagtail.core.models import Locale
 
-from wagtail_localize_git.git import Repository, RepositoryReader, RepositoryWriter
+from wagtail_localize_git.git import (
+    DEFAULT_BRANCH,
+    Repository,
+    RepositoryReader,
+    RepositoryWriter,
+)
 
 from .utils import GitRepositoryUtils
 
@@ -20,7 +25,7 @@ class GitTestCase(GitRepositoryUtils, TestCase):
         self.repo_dir, self.repo = self.make_repo()
         self.repo_dir = tempfile.TemporaryDirectory()
         self.initial_commit = self.repo.gitpython.index.commit("initial commit")
-        self.repo.gitpython.create_head("master")
+        self.repo.gitpython.create_head(DEFAULT_BRANCH)
 
 
 class TestRepository(GitTestCase):
@@ -94,7 +99,7 @@ class TestRepositoryClonePullPush(GitTestCase):
             "+refs/heads/*:refs/remotes/origin/*"
         )
         self.repo.pygit.lookup_reference.assert_called_with(
-            "refs/remotes/origin/master"
+            f"refs/remotes/origin/{DEFAULT_BRANCH}"
         )
         self.repo.pygit.head.set_target.assert_called_with("1234")
         self.assertFalse(self.repo.repo_is_empty)
@@ -110,7 +115,7 @@ class TestRepositoryClonePullPush(GitTestCase):
             "+refs/heads/*:refs/remotes/origin/*"
         )
         self.repo.pygit.lookup_reference.assert_called_with(
-            "refs/remotes/origin/master"
+            f"refs/remotes/origin/{DEFAULT_BRANCH}"
         )
         self.repo.pygit.head.set_target.assert_not_called()
         self.assertTrue(self.repo.repo_is_empty)
@@ -120,7 +125,7 @@ class TestRepositoryClonePullPush(GitTestCase):
         self.repo.push()
 
         self.repo.gitpython.remotes.origin.push.assert_called_with(
-            ["refs/heads/master"]
+            [f"refs/heads/{DEFAULT_BRANCH}"]
         )
 
 

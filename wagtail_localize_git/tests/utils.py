@@ -7,7 +7,7 @@ import pygit2
 from django.test import override_settings
 from git import Repo
 
-from wagtail_localize_git.git import Repository
+from wagtail_localize_git.git import DEFAULT_BRANCH, Repository
 
 
 class GitRepositoryUtils:
@@ -26,7 +26,7 @@ class GitRepositoryUtils:
         repo_dir = tempfile.TemporaryDirectory()
         self.dirs_to_cleanup.append(repo_dir)
 
-        gitpython = Repo.init(repo_dir.name, bare=True)
+        gitpython = Repo.init(repo_dir.name, bare=True, initial_branch=DEFAULT_BRANCH)
         pygit = pygit2.Repository(repo_dir.name)
 
         return repo_dir.name, Repository(pygit, gitpython)
@@ -58,7 +58,12 @@ class GitRepositoryUtils:
         )
 
         repo.pygit.create_commit(
-            "refs/heads/master", sig, sig, message, tree, [repo.pygit.head.target]
+            f"refs/heads/{DEFAULT_BRANCH}",
+            sig,
+            sig,
+            message,
+            tree,
+            [repo.pygit.head.target],
         )
 
         return repo.pygit.head.target.hex
