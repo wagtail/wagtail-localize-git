@@ -27,7 +27,10 @@ setup(
     long_description_content_type="text/markdown",
     author="Karl Hobley",
     author_email="karl@torchbox.com",
-    url="",
+    url="https://github.com/wagtail/wagtail-localize-git",
+    project_urls={
+        "Changelog": "https://github.com/wagtail/wagtail-localize-git/blob/main/CHANGELOG.md",
+    },
     packages=find_packages(),
     include_package_data=True,
     license="BSD",
