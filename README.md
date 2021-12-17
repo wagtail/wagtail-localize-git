@@ -1,5 +1,10 @@
 # wagtail-localize-git
 
+[![Version](https://img.shields.io/pypi/v/wagtail-localize-git.svg?style=flat)](https://pypi.python.org/pypi/wagtail-localize-git/)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause)
+[![black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat)](https://github.com/psf/black)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white&style=flat)](https://github.com/pre-commit/pre-commit)
+
 This plugin enables translating Wagtail content using a PO files in a git repository.
 
 It works by committing source content into the repository then polling it for updates. When the PO files are translated, this will automatically create translated pages in Wagtail.
