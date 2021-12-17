@@ -1,9 +1,9 @@
 from django.db import models
 from django.utils.text import slugify
-from wagtail.core.models import Page, Locale
-from wagtail.snippets.models import get_snippet_models
-from wagtail.images.models import AbstractImage
+from wagtail.core.models import Locale, Page
 from wagtail.documents.models import AbstractDocument
+from wagtail.images.models import AbstractImage
+from wagtail.snippets.models import get_snippet_models
 
 from wagtail_localize.models import TranslatableObject
 
@@ -12,13 +12,16 @@ class Resource(models.Model):
     """
     An object that is pushed to the git repo.
     """
-    object = models.OneToOneField(TranslatableObject, on_delete=models.CASCADE, related_name='git_resource')
+
+    object = models.OneToOneField(
+        TranslatableObject, on_delete=models.CASCADE, related_name="git_resource"
+    )
 
     # We need to save the path so that it doesn't change when pages are moved.
     path = models.TextField(unique=True)
 
     class Meta:
-        ordering = ['path']
+        ordering = ["path"]
 
     @classmethod
     def get_for_object(cls, object):
@@ -31,7 +34,6 @@ class Resource(models.Model):
 
             return cls.objects.create(
                 object=object,
-
                 # TODO: How to deal with duplicate paths?
                 path=cls.get_path(instance),
             )
@@ -41,34 +43,35 @@ class Resource(models.Model):
         if isinstance(instance, Page):
             # Page paths have the format: `pages/URL_PATH`
             # Note: Page.url_path always starts with a '/'
-            return 'pages' + instance.url_path.rstrip('/')
+            return "pages" + instance.url_path.rstrip("/")
 
         else:
-            model_name = instance._meta.app_label + '.' + instance.__class__.__name__
+            model_name = instance._meta.app_label + "." + instance.__class__.__name__
 
             if isinstance(instance, tuple(get_snippet_models())):
                 # Snippet paths have the format `snippets/app_label.ModelName/ID-title-slugified`
-                base_path = 'snippets/' + model_name
+                base_path = "snippets/" + model_name
 
             elif isinstance(instance, AbstractImage):
                 # Image paths have the format `images/ID-title-slugified`
-                base_path = 'images'
+                base_path = "images"
 
             elif isinstance(instance, AbstractDocument):
                 # Document paths have the format `documents/ID-title-slugified`
-                base_path = 'documents'
+                base_path = "documents"
 
             else:
                 # All other models paths have the format `other/app_label.ModelName/ID-title-slugified`
-                base_path = 'other/' + model_name
+                base_path = "other/" + model_name
 
-            return base_path + '/' + str(instance.pk) + '-' + slugify(str(instance))
+            return base_path + "/" + str(instance.pk) + "-" + slugify(str(instance))
 
 
 class SyncLog(models.Model):
     """
     Logs whenever we push or pull.
     """
+
     ACTION_PUSH = 1
     ACTION_PULL = 2
 
@@ -87,7 +90,7 @@ class SyncLog(models.Model):
         )
 
     class Meta:
-        ordering = ['time']
+        ordering = ["time"]
 
 
 class SyncLogResourceQuerySet(models.QuerySet):
@@ -104,9 +107,8 @@ class SyncLogResource(models.Model):
     """
     Logs each resource that was transferred in a push/pull
     """
-    log = models.ForeignKey(
-        SyncLog, on_delete=models.CASCADE, related_name="resources"
-    )
+
+    log = models.ForeignKey(SyncLog, on_delete=models.CASCADE, related_name="resources")
     resource = models.ForeignKey(
         Resource, on_delete=models.CASCADE, related_name="logs"
     )
@@ -130,4 +132,4 @@ class SyncLogResource(models.Model):
     objects = SyncLogResourceQuerySet.as_manager()
 
     class Meta:
-        ordering = ['log__time', 'resource__path']
+        ordering = ["log__time", "resource__path"]

@@ -1,7 +1,6 @@
-from django.urls import path, include, reverse
+from django.urls import include, path, reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.i18n import JavaScriptCatalog
-
 from wagtail.admin.menu import MenuItem
 from wagtail.core import hooks
 
@@ -13,7 +12,11 @@ def register_admin_urls():
     urls = [
         path("", views.dashboard, name="dashboard"),
         path("force-sync/", views.force_sync, name="force_sync"),
-        path('jsi18n/', JavaScriptCatalog.as_view(packages=['wagtail_localize_git']), name='javascript_catalog'),
+        path(
+            "jsi18n/",
+            JavaScriptCatalog.as_view(packages=["wagtail_localize_git"]),
+            name="javascript_catalog",
+        ),
     ]
 
     return [

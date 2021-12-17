@@ -1,9 +1,11 @@
-import tempfile
 import os
+import tempfile
+
 from unittest import mock
 
-import toml
 import pygit2
+import toml
+
 from django.test import TestCase, override_settings
 from wagtail.core.models import Locale
 
@@ -50,8 +52,8 @@ class TestRepository(GitTestCase):
         self.assertIsNone(commit_id)
 
 
-@mock.patch('pygit2.Repository')
-@mock.patch('wagtail_localize_git.git.Repo')
+@mock.patch("pygit2.Repository")
+@mock.patch("wagtail_localize_git.git.Repo")
 class TestRepositoryClonePullPush(GitTestCase):
     def test_open(self, Repo, PyGitRepository):
         with override_settings(WAGTAILLOCALIZE_GIT_CLONE_DIR=self.repo_dir.name):
@@ -65,10 +67,15 @@ class TestRepositoryClonePullPush(GitTestCase):
     def test_open_empty(self, Repo, PyGitRepository):
         empty_dir = tempfile.TemporaryDirectory()
         os.rmdir(empty_dir.name)
-        with override_settings(WAGTAILLOCALIZE_GIT_CLONE_DIR=empty_dir.name, WAGTAILLOCALIZE_GIT_URL='git@github.com:wagtail/wagtail-localize.git'):
+        with override_settings(
+            WAGTAILLOCALIZE_GIT_CLONE_DIR=empty_dir.name,
+            WAGTAILLOCALIZE_GIT_URL="git@github.com:wagtail/wagtail-localize.git",
+        ):
             Repository.open()
 
-        Repo.clone_from.assert_called_with('git@github.com:wagtail/wagtail-localize.git', empty_dir.name, bare=True)
+        Repo.clone_from.assert_called_with(
+            "git@github.com:wagtail/wagtail-localize.git", empty_dir.name, bare=True
+        )
 
         PyGitRepository.assert_called_with(empty_dir.name)
         Repo.assert_called_with(empty_dir.name)
@@ -79,13 +86,17 @@ class TestRepositoryClonePullPush(GitTestCase):
     def test_pull(self, Repo, PyGitRepository):
         self.repo.gitpython = mock.MagicMock()
         self.repo.pygit = mock.MagicMock()
-        self.repo.pygit.lookup_reference.return_value.target = '1234'
+        self.repo.pygit.lookup_reference.return_value.target = "1234"
 
         self.repo.pull()
 
-        self.repo.gitpython.remotes.origin.fetch.assert_called_with("+refs/heads/*:refs/remotes/origin/*")
-        self.repo.pygit.lookup_reference.assert_called_with("refs/remotes/origin/master")
-        self.repo.pygit.head.set_target.assert_called_with('1234')
+        self.repo.gitpython.remotes.origin.fetch.assert_called_with(
+            "+refs/heads/*:refs/remotes/origin/*"
+        )
+        self.repo.pygit.lookup_reference.assert_called_with(
+            "refs/remotes/origin/master"
+        )
+        self.repo.pygit.head.set_target.assert_called_with("1234")
         self.assertFalse(self.repo.repo_is_empty)
 
     def test_pull_empty(self, Repo, PyGitRepository):
@@ -95,8 +106,12 @@ class TestRepositoryClonePullPush(GitTestCase):
 
         self.repo.pull()
 
-        self.repo.gitpython.remotes.origin.fetch.assert_called_with("+refs/heads/*:refs/remotes/origin/*")
-        self.repo.pygit.lookup_reference.assert_called_with("refs/remotes/origin/master")
+        self.repo.gitpython.remotes.origin.fetch.assert_called_with(
+            "+refs/heads/*:refs/remotes/origin/*"
+        )
+        self.repo.pygit.lookup_reference.assert_called_with(
+            "refs/remotes/origin/master"
+        )
         self.repo.pygit.head.set_target.assert_not_called()
         self.assertTrue(self.repo.repo_is_empty)
 
@@ -104,7 +119,9 @@ class TestRepositoryClonePullPush(GitTestCase):
         self.repo.gitpython = mock.MagicMock()
         self.repo.push()
 
-        self.repo.gitpython.remotes.origin.push.assert_called_with(["refs/heads/master"])
+        self.repo.gitpython.remotes.origin.push.assert_called_with(
+            ["refs/heads/master"]
+        )
 
 
 class TestRepositoryGetChangedFiles(GitTestCase):
@@ -114,10 +131,16 @@ class TestRepositoryGetChangedFiles(GitTestCase):
         # Create a commit that creates some files to change
         index = pygit2.Index()
         self.add_file_to_index(self.repo, index, "locales/test.txt", "this is a test")
-        self.add_file_to_index(self.repo, index, "locales/test-change.txt", "this is a test")
+        self.add_file_to_index(
+            self.repo, index, "locales/test-change.txt", "this is a test"
+        )
         self.add_file_to_index(self.repo, index, "test-change.txt", "this is a test")
-        self.add_file_to_index(self.repo, index, "locales/test-delete.txt", "this is a test")
-        self.first_commit_id = self.make_commit_from_index(self.repo, index, "First commit")
+        self.add_file_to_index(
+            self.repo, index, "locales/test-delete.txt", "this is a test"
+        )
+        self.first_commit_id = self.make_commit_from_index(
+            self.repo, index, "First commit"
+        )
 
         # Create a second commit with some files changed:
         # test.txt remains the same
@@ -126,24 +149,48 @@ class TestRepositoryGetChangedFiles(GitTestCase):
         # test-added.txt was added
         index = pygit2.Index()
         self.add_file_to_index(self.repo, index, "locales/test.txt", "this is a test")
-        self.add_file_to_index(self.repo, index, "locales/test-change.txt", "this is a test that has been changed")
-        self.add_file_to_index(self.repo, index, "test-change.txt", "this is a test that has been changed")
-        self.add_file_to_index(self.repo, index, "locales/test-added.txt", "this is a test")
-        self.second_commit_id = self.make_commit_from_index(self.repo, index, "Second commit")
+        self.add_file_to_index(
+            self.repo,
+            index,
+            "locales/test-change.txt",
+            "this is a test that has been changed",
+        )
+        self.add_file_to_index(
+            self.repo, index, "test-change.txt", "this is a test that has been changed"
+        )
+        self.add_file_to_index(
+            self.repo, index, "locales/test-added.txt", "this is a test"
+        )
+        self.second_commit_id = self.make_commit_from_index(
+            self.repo, index, "Second commit"
+        )
 
     def test_get_changed_files(self):
-        result = list(self.repo.get_changed_files(self.first_commit_id, self.second_commit_id))
+        result = list(
+            self.repo.get_changed_files(self.first_commit_id, self.second_commit_id)
+        )
 
         # Additions, deletes and any changes outside of 'locales/' should be ignored
-        self.assertEqual(result, [
-            ('locales/test-change.txt', b'this is a test', b'this is a test that has been changed')
-        ])
+        self.assertEqual(
+            result,
+            [
+                (
+                    "locales/test-change.txt",
+                    b"this is a test",
+                    b"this is a test that has been changed",
+                )
+            ],
+        )
 
     def test_get_changed_files_incorrect_commit_order(self):
         with self.assertRaises(ValueError) as e:
-            list(self.repo.get_changed_files(self.second_commit_id, self.first_commit_id))
+            list(
+                self.repo.get_changed_files(self.second_commit_id, self.first_commit_id)
+            )
 
-        self.assertEqual(e.exception.args, ('Second commit must be a descendant of first commit',))
+        self.assertEqual(
+            e.exception.args, ("Second commit must be a descendant of first commit",)
+        )
 
     def test_get_changed_files_from_initial_commit(self):
         result = list(self.repo.get_changed_files(None, self.first_commit_id))
@@ -159,15 +206,14 @@ class TestRepositoryReader(GitTestCase):
         # Create a commit that creates some files to change
         index = pygit2.Index()
         self.add_file_to_index(self.repo, index, "test.txt", "this is a test")
-        self.first_commit_id = self.make_commit_from_index(self.repo, index, "First commit")
+        self.first_commit_id = self.make_commit_from_index(
+            self.repo, index, "First commit"
+        )
 
     def test_read_file(self):
         reader = self.repo.reader()
 
-        self.assertEqual(
-            reader.read_file("test.txt"),
-            b'this is a test'
-        )
+        self.assertEqual(reader.read_file("test.txt"), b"this is a test")
 
     def test_read_nonexistent_file(self):
         reader = self.repo.reader()
@@ -175,7 +221,7 @@ class TestRepositoryReader(GitTestCase):
         with self.assertRaises(KeyError) as e:
             reader.read_file("foo.txt"),
 
-        self.assertEqual(e.exception.args, ('foo.txt',))
+        self.assertEqual(e.exception.args, ("foo.txt",))
 
 
 class TestRepositoryWriter(GitTestCase):
@@ -232,7 +278,13 @@ class TestRepositoryWriter(GitTestCase):
 
         writer.write_config(
             ["en", "de", "fr"],
-            [("templates/mytemplate.pot", r"locales/{locale}/mytranslation.po", [Locale.objects.get(language_code="en")])],
+            [
+                (
+                    "templates/mytemplate.pot",
+                    r"locales/{locale}/mytranslation.po",
+                    [Locale.objects.get(language_code="en")],
+                )
+            ],
         )
 
         writer.commit("Wrote config")
@@ -247,24 +299,42 @@ class TestRepositoryWriter(GitTestCase):
                         {
                             "l10n": r"locales/{locale}/mytranslation.po",
                             "reference": "templates/mytemplate.pot",
-                            "locales": ["en"]
+                            "locales": ["en"],
                         }
                     ],
                 },
             )
 
         self.assert_file_in_tree(
-            self.repo.gitpython.head.commit.tree, "l10n.toml", check_contents=check_contents
+            self.repo.gitpython.head.commit.tree,
+            "l10n.toml",
+            check_contents=check_contents,
         )
 
     def test_copy_unmanaged_files(self):
         # Create some files
         index = pygit2.Index()
-        self.add_file_to_index(self.repo, index, "locales/test.txt", "this file is managed because it's in locales")
-        self.add_file_to_index(self.repo, index, "templates/test.txt", "this file is managed because it's in templates")
-        self.add_file_to_index(self.repo, index, "l10n.toml", "this one is also managed")
-        self.add_file_to_index(self.repo, index, "README.md", "this is an unmanaged file")
-        self.add_file_to_index(self.repo, index, "docs/foo.md", "this is also an unmanaged file")
+        self.add_file_to_index(
+            self.repo,
+            index,
+            "locales/test.txt",
+            "this file is managed because it's in locales",
+        )
+        self.add_file_to_index(
+            self.repo,
+            index,
+            "templates/test.txt",
+            "this file is managed because it's in templates",
+        )
+        self.add_file_to_index(
+            self.repo, index, "l10n.toml", "this one is also managed"
+        )
+        self.add_file_to_index(
+            self.repo, index, "README.md", "this is an unmanaged file"
+        )
+        self.add_file_to_index(
+            self.repo, index, "docs/foo.md", "this is also an unmanaged file"
+        )
         self.make_commit_from_index(self.repo, index, "First commit")
 
         writer = self.repo.writer()
@@ -276,8 +346,12 @@ class TestRepositoryWriter(GitTestCase):
         # FIXME self.assert_file_in_tree(self.repo.gitpython.head.commit.tree, "docs/foo.md")
 
         # Check managed files weren't
-        self.assert_file_not_in_tree(self.repo.gitpython.head.commit.tree, "locales/test.txt")
-        self.assert_file_not_in_tree(self.repo.gitpython.head.commit.tree, "templates/test.txt")
+        self.assert_file_not_in_tree(
+            self.repo.gitpython.head.commit.tree, "locales/test.txt"
+        )
+        self.assert_file_not_in_tree(
+            self.repo.gitpython.head.commit.tree, "templates/test.txt"
+        )
         self.assert_file_not_in_tree(self.repo.gitpython.head.commit.tree, "l10n.toml")
 
     def test_commit(self):
@@ -290,7 +364,9 @@ class TestRepositoryWriter(GitTestCase):
         self.assertEqual(head_commit.message, "Commit")
         self.assertEqual(head_commit.parents, (parent,))
         self.assertEqual(head_commit.author.name, "Wagtail Localize")
-        self.assertEqual(head_commit.author.email, "wagtail_localize_pontoon@wagtail.io")
+        self.assertEqual(
+            head_commit.author.email, "wagtail_localize_pontoon@wagtail.io"
+        )
 
     def test_commit_empty_repo(self):
         # Set up a new empty repo
@@ -306,4 +382,6 @@ class TestRepositoryWriter(GitTestCase):
         self.assertEqual(head_commit.message, "Initial commit")
         self.assertEqual(head_commit.parents, ())
         self.assertEqual(head_commit.author.name, "Wagtail Localize")
-        self.assertEqual(head_commit.author.email, "wagtail_localize_pontoon@wagtail.io")
+        self.assertEqual(
+            head_commit.author.email, "wagtail_localize_pontoon@wagtail.io"
+        )

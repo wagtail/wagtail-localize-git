@@ -1,17 +1,18 @@
 import sys
 import unittest
-from unittest import mock
+
 from pathlib import PurePosixPath
+from unittest import mock
 
 import pygit2
+
 from django.test import TestCase, override_settings
-from wagtail.core.models import Page, Locale
+from wagtail.core.models import Locale, Page
 
-from wagtail_localize.models import TranslationSource, Translation, StringTranslation
+from wagtail_localize.models import StringTranslation, Translation, TranslationSource
 from wagtail_localize.test.models import TestPage
-
-from wagtail_localize_git.models import SyncLog, Resource
-from wagtail_localize_git.sync import _push, _pull, get_sync_manager
+from wagtail_localize_git.models import Resource, SyncLog
+from wagtail_localize_git.sync import _pull, _push, get_sync_manager
 
 from .utils import GitRepositoryUtils
 
@@ -53,16 +54,27 @@ class TestPull(GitRepositoryUtils, TestCase):
         repo.gitpython.create_head("master")
         return repo
 
-    def commit_translation(self, repo, resource, translation, modify_locale_po=None, commit_message=None):
+    def commit_translation(
+        self, repo, resource, translation, modify_locale_po=None, commit_message=None
+    ):
         translation_po = translation.export_po()
 
         if modify_locale_po:
             modify_locale_po(translation_po)
 
         index = pygit2.Index()
-        self.add_file_to_index(repo, index, f"templates/{resource.path}.pot", str(translation.source.export_po()))
-        self.add_file_to_index(repo, index, f"locales/fr/{resource.path}.po", str(translation_po))
-        return self.make_commit_from_index(repo, index, commit_message or "Added a translation")
+        self.add_file_to_index(
+            repo,
+            index,
+            f"templates/{resource.path}.pot",
+            str(translation.source.export_po()),
+        )
+        self.add_file_to_index(
+            repo, index, f"locales/fr/{resource.path}.po", str(translation_po)
+        )
+        return self.make_commit_from_index(
+            repo, index, commit_message or "Added a translation"
+        )
 
     def test_pull(self):
         page, source, translation, resource = self.make_test_resource()
@@ -80,7 +92,14 @@ class TestPull(GitRepositoryUtils, TestCase):
         # Let's simulate Pontoon modifying the git repo
         def add_french_string(translation_po):
             translation_po[0].msgstr = "Certains tests de contenu traduisible"
-        pontoon_commit_id = self.commit_translation(repo, resource, translation, modify_locale_po=add_french_string, commit_message="(Pontoon) Edited a translation")
+
+        pontoon_commit_id = self.commit_translation(
+            repo,
+            resource,
+            translation,
+            modify_locale_po=add_french_string,
+            commit_message="(Pontoon) Edited a translation",
+        )
 
         # Run the pull code
         logger = mock.MagicMock()
@@ -92,12 +111,19 @@ class TestPull(GitRepositoryUtils, TestCase):
 
         # Check the translated string was inserted
         string_translation = StringTranslation.objects.get()
-        self.assertEqual(string_translation.translation_of.data, "Some test translatable content")
+        self.assertEqual(
+            string_translation.translation_of.data, "Some test translatable content"
+        )
         self.assertEqual(string_translation.locale, self.locale_fr)
         self.assertEqual(string_translation.context.object, source.object)
-        self.assertEqual(string_translation.context.path, 'test_charfield')
-        self.assertEqual(string_translation.data, "Certains tests de contenu traduisible")
-        self.assertEqual(string_translation.translation_type, StringTranslation.TRANSLATION_TYPE_MANUAL)
+        self.assertEqual(string_translation.context.path, "test_charfield")
+        self.assertEqual(
+            string_translation.data, "Certains tests de contenu traduisible"
+        )
+        self.assertEqual(
+            string_translation.translation_type,
+            StringTranslation.TRANSLATION_TYPE_MANUAL,
+        )
         self.assertEqual(string_translation.tool_name, "Pontoon")
         self.assertFalse(string_translation.has_error)
 
@@ -118,7 +144,14 @@ class TestPull(GitRepositoryUtils, TestCase):
         # This time, we will insert invalid HTML
         def add_french_string(translation_po):
             translation_po[0].msgstr = "<script>foo()</script>"
-        pontoon_commit_id = self.commit_translation(repo, resource, translation, modify_locale_po=add_french_string, commit_message="(Pontoon) Edited a translation")
+
+        pontoon_commit_id = self.commit_translation(
+            repo,
+            resource,
+            translation,
+            modify_locale_po=add_french_string,
+            commit_message="(Pontoon) Edited a translation",
+        )
 
         # Run the pull code
         logger = mock.MagicMock()
@@ -130,9 +163,14 @@ class TestPull(GitRepositoryUtils, TestCase):
 
         # Check the translated string was inserted, but the error was detected
         string_translation = StringTranslation.objects.get()
-        self.assertEqual(string_translation.translation_of.data, "Some test translatable content")
+        self.assertEqual(
+            string_translation.translation_of.data, "Some test translatable content"
+        )
         self.assertEqual(string_translation.data, "<script>foo()</script>")
-        self.assertEqual(string_translation.translation_type, StringTranslation.TRANSLATION_TYPE_MANUAL)
+        self.assertEqual(
+            string_translation.translation_type,
+            StringTranslation.TRANSLATION_TYPE_MANUAL,
+        )
         self.assertEqual(string_translation.tool_name, "Pontoon")
         self.assertTrue(string_translation.has_error)
 
@@ -226,7 +264,7 @@ class TestPush(TestCase):
                 (
                     PurePosixPath("templates/pages/test-page.pot"),
                     PurePosixPath(r"locales/{locale}/pages/test-page.po"),
-                    [self.locale_fr]
+                    [self.locale_fr],
                 )
             ],
         )
@@ -267,12 +305,12 @@ class TestSyncManager(GitRepositoryUtils, TestCase):
         self.local_repo_dir, self.local_repo = self.clone_repo(self.remote_repo_dir)
 
         self.settings = {
-            'WAGTAILLOCALIZE_GIT_URL': self.remote_repo_dir,
-            'WAGTAILLOCALIZE_GIT_CLONE_DIR': self.local_repo_dir,
+            "WAGTAILLOCALIZE_GIT_URL": self.remote_repo_dir,
+            "WAGTAILLOCALIZE_GIT_CLONE_DIR": self.local_repo_dir,
         }
 
-    @mock.patch('wagtail_localize_git.sync._push')
-    @mock.patch('wagtail_localize_git.sync._pull')
+    @mock.patch("wagtail_localize_git.sync._push")
+    @mock.patch("wagtail_localize_git.sync._pull")
     def test_sync(self, _pull, _push):
         # Add a commit to the remote repo
         commit = self.remote_repo.gitpython.index.commit("A new commit")
@@ -288,7 +326,7 @@ class TestSyncManager(GitRepositoryUtils, TestCase):
         # The commit should've been pulled
         self.assertEqual(self.local_repo.gitpython.head.commit, commit)
 
-    @mock.patch('wagtail_localize_git.sync.SyncManager.sync')
+    @mock.patch("wagtail_localize_git.sync.SyncManager.sync")
     def test_trigger(self, sync):
         with override_settings(**self.settings):
             sync_manager = get_sync_manager()

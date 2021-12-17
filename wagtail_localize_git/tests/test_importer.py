@@ -1,15 +1,20 @@
 import logging
+
 from unittest import mock
 
 import polib
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
+from wagtail.core.models import Locale, Page
 
-from wagtail.core.models import Page, Locale
-from wagtail_localize.models import TranslationSource, Translation, MissingRelatedObjectError
+from wagtail_localize.models import (
+    MissingRelatedObjectError,
+    Translation,
+    TranslationSource,
+)
 from wagtail_localize.test.models import TestPage
-
 from wagtail_localize_git.importer import Importer
 from wagtail_localize_git.models import Resource, SyncLog
 
@@ -70,9 +75,7 @@ class TestImporter(TestCase):
         # Check translated page was created
         translated_page = TestPage.objects.get(locale=self.locale)
         self.assertEqual(translated_page.translation_key, self.page.translation_key)
-        self.assertEqual(
-            translated_page.test_charfield, "Le champ traduisible de test"
-        )
+        self.assertEqual(translated_page.test_charfield, "Le champ traduisible de test")
         self.assertEqual(
             translated_page.test_synchronized_charfield,
             "The test synchronized field",
@@ -149,13 +152,19 @@ class TestImporter(TestCase):
         importer.import_resource(self.translation, po)
 
         # Check that the warnings were logged
-        logger.warning.assert_any_call("While translating 'Test page' into French: Unrecognised string 'Unknown string'")
-        logger.warning.assert_any_call("While translating 'Test page' into French: Unrecognised context 'unknown_context'")
-        logger.warning.assert_any_call("While translating 'Test page' into French: The string 'The other test translatable field' is not used in context  'test_charfield'")
+        logger.warning.assert_any_call(
+            "While translating 'Test page' into French: Unrecognised string 'Unknown string'"
+        )
+        logger.warning.assert_any_call(
+            "While translating 'Test page' into French: Unrecognised context 'unknown_context'"
+        )
+        logger.warning.assert_any_call(
+            "While translating 'Test page' into French: The string 'The other test translatable field' is not used in context  'test_charfield'"
+        )
 
-    @mock.patch('wagtail_localize.models.Translation.save_target')
+    @mock.patch("wagtail_localize.models.Translation.save_target")
     def test_importer_missing_related_object(self, save_target):
-        save_target.side_effect = MissingRelatedObjectError('segment', self.locale)
+        save_target.side_effect = MissingRelatedObjectError("segment", self.locale)
 
         po = create_test_po(
             [
@@ -172,11 +181,15 @@ class TestImporter(TestCase):
         importer.import_resource(self.translation, po)
 
         # Check a warning was logged
-        logger.warning.assert_called_with("Unable to translate 'Test page' into French: Missing related object")
+        logger.warning.assert_called_with(
+            "Unable to translate 'Test page' into French: Missing related object"
+        )
 
-    @mock.patch('wagtail_localize.models.Translation.save_target')
+    @mock.patch("wagtail_localize.models.Translation.save_target")
     def test_importer_validation_error(self, save_target):
-        save_target.side_effect = ValidationError({'slug': "This slug is already in use."})
+        save_target.side_effect = ValidationError(
+            {"slug": "This slug is already in use."}
+        )
 
         po = create_test_po(
             [
@@ -193,7 +206,9 @@ class TestImporter(TestCase):
         importer.import_resource(self.translation, po)
 
         # Check a warning was logged
-        logger.warning.assert_called_with("Unable to translate 'Test page' into French: ValidationError({'slug': ['This slug is already in use.']})")
+        logger.warning.assert_called_with(
+            "Unable to translate 'Test page' into French: ValidationError({'slug': ['This slug is already in use.']})"
+        )
 
 
 class TestImporterRichText(TestCase):

@@ -6,11 +6,12 @@ from setuptools import find_packages, setup
 
 from wagtail_localize_git import __version__
 
+
 # Hack to prevent "TypeError: 'NoneType' object is not callable" error
 # in multiprocessing/util.py _exit_function when setup.py exits
 # (see http://www.eby-sarna.com/pipermail/peak/2010-May/003357.html)
 try:
-    import multiprocessing
+    import multiprocessing  # noqa
 except ImportError:
     pass
 
@@ -23,7 +24,7 @@ setup(
     version=__version__,
     description="Wagtail Localize integration for Git-based translation services",
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     author="Karl Hobley",
     author_email="karl@torchbox.com",
     url="",
@@ -55,7 +56,7 @@ setup(
         "wagtail-localize>=1.0,<=1.1",
         "pygit2>=1.0,<2.0",
         "gitpython>=3.0,<4.0",
-        "toml>=0.10,<0.11"
+        "toml>=0.10,<0.11",
     ],
     extras_require={
         "testing": ["dj-database-url==0.5.0", "freezegun==0.3.15"],

@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - [Support for Wagtail 2.15](https://github.com/wagtail/wagtail-localize-git/pull/17)
-- Testing with Python 3.9 and 3.10 ([#17](https://github.com/wagtail/wagtail-localize-git/pull/17), [#18](https://github.com/wagtail/wagtail-localize-git/pull/18)) 
+- Testing with Python 3.9 and 3.10 ([#17](https://github.com/wagtail/wagtail-localize-git/pull/17), [#18](https://github.com/wagtail/wagtail-localize-git/pull/18))
 
 ## [0.10] - 2021-09-28
 

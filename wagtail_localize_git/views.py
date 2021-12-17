@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import user_passes_test
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 
 from wagtail_localize.models import Translation
 
@@ -15,15 +15,22 @@ def dashboard(request):
         "wagtail_localize_git/dashboard.html",
         {
             "resources": [
-                (resource, [
-                    (
-                        locale,
-                        Translation.objects.filter(source__object_id=resource.object_id, target_locale=locale).first(),
-                        SyncLogResource.objects.filter(resource=resource, locale=locale).last(),
-                    )
-
-                    for locale in resource.logs.unique_locales()
-                ])
+                (
+                    resource,
+                    [
+                        (
+                            locale,
+                            Translation.objects.filter(
+                                source__object_id=resource.object_id,
+                                target_locale=locale,
+                            ).first(),
+                            SyncLogResource.objects.filter(
+                                resource=resource, locale=locale
+                            ).last(),
+                        )
+                        for locale in resource.logs.unique_locales()
+                    ],
+                )
                 for resource in Resource.objects.all()
             ],
             "logs": SyncLog.objects.order_by("-time"),

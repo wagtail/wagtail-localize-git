@@ -9,45 +9,109 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('wagtail_localize', '0002_translation'),
-        ('wagtailcore', '0057_page_locale_fields_notnull'),
+        ("wagtail_localize", "0002_translation"),
+        ("wagtailcore", "0057_page_locale_fields_notnull"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Resource',
+            name="Resource",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('path', models.TextField(unique=True)),
-                ('object', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='git_resource', to='wagtail_localize.TranslatableObject')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("path", models.TextField(unique=True)),
+                (
+                    "object",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="git_resource",
+                        to="wagtail_localize.TranslatableObject",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['path'],
+                "ordering": ["path"],
             },
         ),
         migrations.CreateModel(
-            name='SyncLog',
+            name="SyncLog",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.PositiveIntegerField(choices=[(1, 'Push'), (2, 'Pull')])),
-                ('time', models.DateTimeField(auto_now_add=True)),
-                ('commit_id', models.CharField(blank=True, max_length=40)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "action",
+                    models.PositiveIntegerField(choices=[(1, "Push"), (2, "Pull")]),
+                ),
+                ("time", models.DateTimeField(auto_now_add=True)),
+                ("commit_id", models.CharField(blank=True, max_length=40)),
             ],
             options={
-                'ordering': ['time'],
+                "ordering": ["time"],
             },
         ),
         migrations.CreateModel(
-            name='SyncLogResource',
+            name="SyncLogResource",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('locale', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='wagtailcore.Locale')),
-                ('log', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='resources', to='wagtail_localize_git.SyncLog')),
-                ('resource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='logs', to='wagtail_localize_git.Resource')),
-                ('source', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='wagtail_localize.TranslationSource')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "locale",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="+",
+                        to="wagtailcore.Locale",
+                    ),
+                ),
+                (
+                    "log",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="resources",
+                        to="wagtail_localize_git.SyncLog",
+                    ),
+                ),
+                (
+                    "resource",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logs",
+                        to="wagtail_localize_git.Resource",
+                    ),
+                ),
+                (
+                    "source",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to="wagtail_localize.TranslationSource",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['log__time', 'resource__path'],
+                "ordering": ["log__time", "resource__path"],
             },
         ),
     ]
