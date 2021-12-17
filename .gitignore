@@ -6,6 +6,7 @@
 /htmlcov
 /.tox
 /venv
+/.venv
 /.vscode
 /site
 /test_wagtail_localize_git.db
