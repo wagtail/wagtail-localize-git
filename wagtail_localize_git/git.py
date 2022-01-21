@@ -7,6 +7,9 @@ from django.conf import settings
 from git import Repo
 
 
+DEFAULT_BRANCH = getattr(settings, "WAGTAILLOCALIZE_GIT_DEFAULT_BRANCH", "main")
+
+
 class Repository:
     def __init__(self, pygit, gitpython):
         self.pygit = pygit
@@ -33,14 +36,16 @@ class Repository:
     def pull(self):
         self.gitpython.remotes.origin.fetch("+refs/heads/*:refs/remotes/origin/*")
         try:
-            new_head = self.pygit.lookup_reference("refs/remotes/origin/master")
+            new_head = self.pygit.lookup_reference(
+                f"refs/remotes/origin/{DEFAULT_BRANCH}"
+            )
             self.pygit.head.set_target(new_head.target)
         except KeyError:
             print("Checked out an empty repository")
             self.repo_is_empty = True
 
     def push(self):
-        self.gitpython.remotes.origin.push(["refs/heads/master"])
+        self.gitpython.remotes.origin.push([f"refs/heads/{DEFAULT_BRANCH}"])
 
     def get_changed_files(self, old_commit, new_commit):
         """
@@ -165,7 +170,12 @@ class RepositoryWriter:
             self.repo.create_commit("HEAD", sig, sig, message, tree, [])
         else:
             self.repo.create_commit(
-                "refs/heads/master", sig, sig, message, tree, [self.repo.head.target]
+                f"refs/heads/{DEFAULT_BRANCH}",
+                sig,
+                sig,
+                message,
+                tree,
+                [self.repo.head.target],
             )
 
         return self.repo.head.target.hex

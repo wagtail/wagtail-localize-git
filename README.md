@@ -34,6 +34,9 @@ Then set the following settings:
 `WAGTAILLOCALIZE_GIT_URL` - This is a URL to an empty git repository that `wagtail-localize-git` will push source strings to and fetch translations from.
 `WAGTAILLOCALIZE_GIT_CLONE_DIR` - The local directory where the git repository will be checked out.
 
+By default, `wagtail-localize-git` will try to checkout and work with the `main` branch. To change that, set `WAGTAILLOCALIZE_GIT_DEFAULT_BRANCH`
+to your repository's default branch (e.g. `master`)
+
 ## Synchronisation
 
 Once this is configured, you can use the `sync_git` management command to push/pull changes. This management command should be set up in your server's crontab to run often (preferably, every 10 minutes).
