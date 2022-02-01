@@ -12,7 +12,7 @@ from wagtail.core.models import Locale, Page
 from wagtail_localize.models import StringTranslation, Translation, TranslationSource
 from wagtail_localize.test.models import TestPage
 from wagtail_localize_git.models import Resource, SyncLog
-from wagtail_localize_git.sync import _pull, _push, get_sync_manager
+from wagtail_localize_git.sync import SyncPushError, _pull, _push, get_sync_manager
 
 from .utils import GitRepositoryUtils
 
@@ -217,6 +217,7 @@ class TestPush(TestCase):
         repo.reader().read_file.side_effect = KeyError
         repo.get_head_commit_id.return_value = "0" * 40
         repo.writer().commit.return_value = "1" * 40
+        repo.push.return_value = True
 
         _push(repo, logger)
 
@@ -254,6 +255,7 @@ class TestPush(TestCase):
         repo.reader().read_file.side_effect = KeyError
         repo.get_head_commit_id.return_value = "0" * 40
         repo.writer().commit.return_value = "1" * 40
+        repo.push.return_value = True
 
         _push(repo, logger)
 
@@ -293,6 +295,18 @@ class TestPush(TestCase):
 
         # FIXME: Need to properly mock out repo.get_changed_files to test this properly
         self.assertFalse(log.resources.exists())
+
+    def test_push_fail_raises_exception(self):
+        repo = mock.MagicMock()
+        logger = mock.MagicMock()
+
+        repo.reader().read_file.side_effect = KeyError
+        repo.get_head_commit_id.return_value = "0" * 40
+        repo.writer().commit.return_value = "1" * 40
+        repo.push.return_value = False
+
+        with self.assertRaises(SyncPushError):
+            _push(repo, logger)
 
 
 class TestSyncManager(GitRepositoryUtils, TestCase):
@@ -348,3 +362,29 @@ class TestSyncManager(GitRepositoryUtils, TestCase):
 
             # Default sync manager always returns false
             self.assertFalse(sync_manager.is_running())
+
+    @mock.patch("wagtail_localize_git.sync._push")
+    @mock.patch("wagtail_localize_git.sync._pull")
+    def test_sync_retry_on_push_error(self, _pull, _push):
+        _push.side_effect = [SyncPushError, SyncPushError, False]
+
+        with override_settings(**self.settings):
+            sync_manager = get_sync_manager()
+            sync_manager.sync()
+
+        # Should call _pull and _push
+        _push.assert_called()
+        _pull.assert_called()
+
+        self.assertEqual(sync_manager.retry_count, 2)
+
+    @mock.patch("wagtail_localize_git.sync._push")
+    @mock.patch("wagtail_localize_git.sync._pull")
+    def test_sync_will_raise_exception_after_max_retries(self, _pull, _push):
+        _push.side_effect = SyncPushError
+        with override_settings(**self.settings):
+            sync_manager = get_sync_manager()
+            with self.assertRaises(SyncPushError):
+                sync_manager.sync()
+
+        self.assertEqual(sync_manager.retry_count, 3)
