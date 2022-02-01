@@ -13,7 +13,7 @@ This is useful for when you are using external translation tools for translating
 
 ## Installation
 
-This plugin requires Wagtail 2.11 with [internationalisation enabled](https://docs.wagtail.io/en/v2.11/advanced_topics/i18n.html#configuration) and [Wagtail Localize](https://github.com/wagtail/wagtail-localize).
+This plugin requires Wagtail >= 2.11 with [internationalisation enabled](https://docs.wagtail.org/en/stable/advanced_topics/i18n.html#configuration) and [Wagtail Localize](https://github.com/wagtail/wagtail-localize).
 
 Install both `wagtail-localize` and `wagtail-localize-git`, then add the following to your `INSTALLED_APPS`:
 
