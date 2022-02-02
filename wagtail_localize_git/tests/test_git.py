@@ -7,6 +7,7 @@ import pygit2
 import toml
 
 from django.test import TestCase, override_settings
+from git import PushInfo
 from wagtail.core.models import Locale
 
 from wagtail_localize_git.git import (
@@ -127,6 +128,37 @@ class TestRepositoryClonePullPush(GitTestCase):
         self.repo.gitpython.remotes.origin.push.assert_called_with(
             [f"refs/heads/{DEFAULT_BRANCH}"]
         )
+
+    def test_push_with_error_flags(self, Repo, PyGitRepository):
+        """
+        Test Repository.push() return value.
+        See https://github.com/gitpython-developers/GitPython/blob/b3f873a/git/remote.py#L180-L218
+        for the PushInfo flag setting
+        """
+        self.repo.gitpython = mock.MagicMock()
+        self.repo.gitpython.remotes.origin.push.return_value = []
+        self.assertFalse(self.repo.push())
+
+        mocked_push_info = mock.MagicMock()
+        mocked_push_info.ERROR = PushInfo.ERROR
+        mocked_push_info.DELETED = PushInfo.DELETED
+        mocked_push_info.REJECTED = PushInfo.REJECTED
+
+        mocked_push_info.flags = PushInfo.ERROR
+        self.repo.gitpython.remotes.origin.push.return_value = [mocked_push_info]
+        self.assertFalse(self.repo.push())
+
+        mocked_push_info.flags = PushInfo.DELETED
+        self.repo.gitpython.remotes.origin.push.return_value = [mocked_push_info]
+        self.assertFalse(self.repo.push())
+
+        mocked_push_info.flags = PushInfo.ERROR | PushInfo.REJECTED
+        self.repo.gitpython.remotes.origin.push.return_value = [mocked_push_info]
+        self.assertFalse(self.repo.push())
+
+        mocked_push_info.flags = 0
+        self.repo.gitpython.remotes.origin.push.return_value = [mocked_push_info]
+        self.assertTrue(self.repo.push())
 
 
 class TestRepositoryGetChangedFiles(GitTestCase):
