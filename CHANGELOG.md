@@ -33,6 +33,6 @@ This release will use `main` as the default branch. To change it anything else, 
  - [Support for Wagtail 2.14](https://github.com/wagtail/wagtail-localize-git/pull/15)
 
 [unreleased]: https://github.com/wagtail/wagtail-localize-git/compare/v0.12.0...HEAD
-[0.11]: https://github.com/wagtail/wagtail-localize-git/compare/v0.11.0...v0.12.0
+[0.12]: https://github.com/wagtail/wagtail-localize-git/compare/v0.11.0...v0.12.0
 [0.11]: https://github.com/wagtail/wagtail-localize-git/compare/v0.10.0...v0.11.0
 [0.10]: https://github.com/wagtail/wagtail-localize-git/compare/v0.9.3...v0.10.0
