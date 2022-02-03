@@ -17,6 +17,13 @@ from .importer import Importer
 from .models import Resource, SyncLog
 
 
+MAX_RETRIES = 3
+
+
+class SyncPushError(Exception):
+    pass
+
+
 @transaction.atomic
 def _pull(repo, logger):
     # Get the last commit ID that we either pulled or pushed
@@ -147,7 +154,9 @@ def _push(repo, logger):
         logger.info("Push: Committing changes")
         log.commit_id = writer.commit("Updates to source content")
         log.save(update_fields=["commit_id"])
-        repo.push()
+        successful_push = repo.push()
+        if not successful_push:
+            raise SyncPushError(f"Failed to push reference {log.commit_id}")
 
         # Add any resources that have changed to the log
         # This ignores any deletions since we don't care about those
@@ -171,6 +180,7 @@ def _push(repo, logger):
 
 class SyncManager:
     def __init__(self, logger=None):
+        self.retry_count = 0
         self.logger = logger or logging.getLogger(__name__)
 
     def sync(self):
@@ -179,8 +189,15 @@ class SyncManager:
         repo.pull()
 
         _pull(repo, self.logger)
-        _push(repo, self.logger)
-
+        try:
+            _push(repo, self.logger)
+        except SyncPushError as e:
+            if self.retry_count < MAX_RETRIES:
+                self.logger.info("Push failed. Retrying sync.")
+                self.retry_count += 1
+                self.sync()
+            else:
+                raise e
         self.logger.info("Finished")
 
     def trigger(self):

@@ -45,7 +45,20 @@ class Repository:
             self.repo_is_empty = True
 
     def push(self):
-        self.gitpython.remotes.origin.push([f"refs/heads/{DEFAULT_BRANCH}"])
+        # GitPython push() returns a list of PushInfo instance for each head used in
+        # the push. The PushInfo instance will have any errors added to flags.
+        # In case of total failure, the returned list is empty.
+        # See https://github.com/gitpython-developers/GitPython/blob/b3f873a/git/remote.py#L180-L218
+        refs = self.gitpython.remotes.origin.push([f"refs/heads/{DEFAULT_BRANCH}"])
+        if not refs:
+            return False
+        push_info = refs[0]
+        return not any(
+            [
+                push_info.flags & push_info.ERROR,
+                push_info.flags & push_info.DELETED,
+            ]
+        )
 
     def get_changed_files(self, old_commit, new_commit):
         """
