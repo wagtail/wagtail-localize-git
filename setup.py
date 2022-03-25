@@ -54,9 +54,9 @@ setup(
         "Framework :: Wagtail :: 2",
     ],
     install_requires=[
-        "Django>=2.2,<3.3",
+        "Django>=2.2,<4.1",
         "Wagtail>=2.11,<2.17",
-        "wagtail-localize>=1.0,<=1.1",
+        "wagtail-localize>=1.0,<1.2",
         "pygit2>=1.0,<2.0",
         "gitpython>=3.0,<4.0",
         "toml>=0.10,<0.11",
