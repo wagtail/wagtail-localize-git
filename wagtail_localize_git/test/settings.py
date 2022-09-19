@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     "wagtail_localize_git",
     "wagtail_localize_git.test",
     "wagtail_localize",
-    "wagtail_localize.test",
     "wagtail.contrib.search_promotions",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",

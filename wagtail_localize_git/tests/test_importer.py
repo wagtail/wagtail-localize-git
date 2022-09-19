@@ -14,9 +14,9 @@ from wagtail_localize.models import (
     Translation,
     TranslationSource,
 )
-from wagtail_localize.test.models import TestPage
 from wagtail_localize_git.importer import Importer
 from wagtail_localize_git.models import Resource, SyncLog
+from wagtail_localize_git.test.models import TestPage
 
 
 def create_test_page(**kwargs):

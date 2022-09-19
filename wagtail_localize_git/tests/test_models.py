@@ -5,8 +5,8 @@ from wagtail.images.models import Image
 from wagtail.images.tests.utils import get_test_image_file
 
 from wagtail_localize.models import TranslationSource
-from wagtail_localize.test.models import TestPage, TestSnippet
 from wagtail_localize_git.models import Resource
+from wagtail_localize_git.test.models import TestPage, TestSnippet
 
 
 def create_test_page(**kwargs):
@@ -51,7 +51,7 @@ class TestResource(TestCase):
         snippet = TestSnippet.objects.create(field="Foo")
         self.assertEqual(
             Resource.get_path(snippet),
-            "snippets/wagtail_localize_test.TestSnippet/1-testsnippet-object-1",
+            "snippets/wagtail_localize_git_test.TestSnippet/1-testsnippet-object-1",
         )
 
     def test_get_path_for_image(self):

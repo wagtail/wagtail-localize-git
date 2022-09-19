@@ -10,9 +10,9 @@ from django.test import TestCase, override_settings
 from wagtail.core.models import Locale, Page
 
 from wagtail_localize.models import StringTranslation, Translation, TranslationSource
-from wagtail_localize.test.models import TestPage
 from wagtail_localize_git.models import Resource, SyncLog
 from wagtail_localize_git.sync import SyncPushError, _pull, _push, get_sync_manager
+from wagtail_localize_git.test.models import TestPage
 
 from .utils import GitRepositoryUtils
 
