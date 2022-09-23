@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13] - 2022-09-23
+
+### Added
+
+- Support for Wagtail 4, wagtail-localize 1.2+ ([#26](https://github.com/wagtail/wagtail-localize-git/pull/26))
+
+### Changed
+
+- Dropped support for Wagtail < 2.15
+- Relaxed the wagtail-localize version constraints
+
 ## [0.12] - 2022-02-03
 
 ### Breaking changes
@@ -32,7 +43,8 @@ This release will use `main` as the default branch. To change it anything else, 
 
  - [Support for Wagtail 2.14](https://github.com/wagtail/wagtail-localize-git/pull/15)
 
-[unreleased]: https://github.com/wagtail/wagtail-localize-git/compare/v0.12.0...HEAD
+[unreleased]: https://github.com/wagtail/wagtail-localize-git/compare/v0.14.0...HEAD
+[0.13]: https://github.com/wagtail/wagtail-localize-git/compare/v0.12.0...v0.13.0
 [0.12]: https://github.com/wagtail/wagtail-localize-git/compare/v0.11.0...v0.12.0
 [0.11]: https://github.com/wagtail/wagtail-localize-git/compare/v0.10.0...v0.11.0
 [0.10]: https://github.com/wagtail/wagtail-localize-git/compare/v0.9.3...v0.10.0
