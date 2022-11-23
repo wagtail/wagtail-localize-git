@@ -272,7 +272,7 @@ class TestRepositoryWriter(GitTestCase):
         commit = self.repo.gitpython.head.commit
         self.assertEqual(commit.parents, (self.initial_commit,))
         self.assertEqual(commit.author.name, "Wagtail Localize")
-        self.assertEqual(commit.author.email, "wagtail_localize_pontoon@wagtail.io")
+        self.assertEqual(commit.author.email, "wagtail_localize_pontoon@wagtail.org")
         self.assertEqual(commit.message, "Added test.txt")
 
         # Check file has been committed
@@ -402,7 +402,7 @@ class TestRepositoryWriter(GitTestCase):
         self.assertEqual(head_commit.parents, (parent,))
         self.assertEqual(head_commit.author.name, "Wagtail Localize")
         self.assertEqual(
-            head_commit.author.email, "wagtail_localize_pontoon@wagtail.io"
+            head_commit.author.email, "wagtail_localize_pontoon@wagtail.org"
         )
 
     def test_commit_empty_repo(self):
@@ -420,5 +420,5 @@ class TestRepositoryWriter(GitTestCase):
         self.assertEqual(head_commit.parents, ())
         self.assertEqual(head_commit.author.name, "Wagtail Localize")
         self.assertEqual(
-            head_commit.author.email, "wagtail_localize_pontoon@wagtail.io"
+            head_commit.author.email, "wagtail_localize_pontoon@wagtail.org"
         )
