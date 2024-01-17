@@ -1,8 +1,8 @@
 from django.test import TestCase
-from wagtail.models import Page, Site
 from wagtail.documents.models import Document
 from wagtail.images.models import Image
 from wagtail.images.tests.utils import get_test_image_file
+from wagtail.models import Page, Site
 
 from wagtail_localize.models import TranslationSource
 from wagtail_localize_git.models import Resource
