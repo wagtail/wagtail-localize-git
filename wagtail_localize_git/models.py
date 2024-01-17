@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
-from wagtail.core.models import Locale, Page
+from wagtail.models import Locale, Page
 from wagtail.documents.models import AbstractDocument
 from wagtail.images.models import AbstractImage
 from wagtail.snippets.models import get_snippet_models

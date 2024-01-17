@@ -8,7 +8,7 @@ import toml
 
 from django.test import TestCase, override_settings
 from git import PushInfo
-from wagtail.core.models import Locale
+from wagtail.models import Locale
 
 from wagtail_localize_git.git import (
     DEFAULT_BRANCH,
