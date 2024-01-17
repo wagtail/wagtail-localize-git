@@ -1,4 +1,5 @@
 from django.test import TestCase
+from testapp.models import TestPage, TestSnippet
 from wagtail.documents.models import Document
 from wagtail.images.models import Image
 from wagtail.images.tests.utils import get_test_image_file
@@ -6,7 +7,6 @@ from wagtail.models import Page, Site
 from wagtail_localize.models import TranslationSource
 
 from wagtail_localize_git.models import Resource
-from wagtail_localize_git.test.models import TestPage, TestSnippet
 
 
 def create_test_page(**kwargs):

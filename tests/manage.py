@@ -9,7 +9,8 @@ import warnings
 from django.core.management import execute_from_command_line
 
 
-os.environ["DJANGO_SETTINGS_MODULE"] = "wagtail_localize_git.test.settings"
+os.environ["DJANGO_SETTINGS_MODULE"] = "testapp.settings"
+sys.path.append("tests")
 
 
 def make_parser():

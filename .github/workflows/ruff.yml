@@ -17,5 +17,5 @@ jobs:
     - run: python -Im pip install --user ruff
 
     - name: Run ruff
-      working-directory: .
+      working-directory: ./src
       run: ruff --output-format=github wagtail_localize_git

@@ -35,26 +35,16 @@ ALLOWED_HOSTS = ["localhost", "testserver"]
 
 INSTALLED_APPS = [
     "wagtail_localize_git",
-    "wagtail_localize_git.test",
+    "testapp",
     "wagtail_localize",
-    "wagtail.contrib.search_promotions",
-    "wagtail.contrib.forms",
-    "wagtail.contrib.redirects",
-    "wagtail.embeds",
     "wagtail.users",
     "wagtail.snippets",
     "wagtail.documents",
     "wagtail.images",
-    "wagtail.search",
     "wagtail.admin",
-    "wagtail.api.v2",
-    "wagtail.contrib.modeladmin",
-    "wagtail.contrib.routable_page",
-    "wagtail.contrib.styleguide",
     "wagtail.sites",
     "wagtail",
     "taggit",
-    "rest_framework",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -75,7 +65,7 @@ MIDDLEWARE = [
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
 ]
 
-ROOT_URLCONF = "wagtail_localize_git.test.urls"
+ROOT_URLCONF = "testapp.urls"
 
 TEMPLATES = [
     {

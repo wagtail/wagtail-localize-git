@@ -7,6 +7,7 @@ import polib
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
+from testapp.models import TestPage
 from wagtail.models import Locale, Page
 from wagtail_localize.models import (
     MissingRelatedObjectError,
@@ -16,7 +17,6 @@ from wagtail_localize.models import (
 
 from wagtail_localize_git.importer import Importer
 from wagtail_localize_git.models import Resource, SyncLog
-from wagtail_localize_git.test.models import TestPage
 
 
 def create_test_page(**kwargs):
