@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'stable/**'
+
   pull_request:
     branches: [main]
 
@@ -12,6 +13,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read # to fetch code (actions/checkout)
 
 env:
   FORCE_COLOR: '1' # Make tools pretty.
@@ -20,15 +23,12 @@ env:
   PIP_NO_PYTHON_VERSION_WARNING: '1'
   PYTHON_LATEST: '3.11'
 
-
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_LATEST }}
       - uses: pre-commit/action@v3.0.0
@@ -39,21 +39,26 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        db: ["sqlite"]
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install --upgrade tox tox-py tox-venv
+          python -Im pip install --upgrade pip
+          python -Im pip install flit tox tox-gh-actions
+          python -Im flit install --symlink
+
+      - name: 🏗️ Build wheel
+        run: python -Im flit build --format wheel
+
       - name: Test
-        run: |
-          tox --py current
+        run: tox --installpkg ./dist/*.whl
 
   test-postgres:
     runs-on: ubuntu-latest
@@ -61,6 +66,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        db: ["sqlite"]
 
     services:
       postgres:
@@ -74,15 +80,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install --upgrade tox tox-py tox-venv
-      - name: Run tox targets for Python ${{ matrix.python-version }}
-        run: |
-          tox --py current
+          python -Im pip install --upgrade pip
+          python -Im pip install flit tox tox-gh-actions
+          python -Im flit install --symlink
+
+      - name: 🏗️ Build wheel
+        run: python -Im flit build --format wheel
+
+      - name: Test
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/wagtail_localize_git
+        run: tox --installpkg ./dist/*.whl
