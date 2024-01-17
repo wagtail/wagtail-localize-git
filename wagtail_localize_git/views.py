@@ -1,6 +1,5 @@
 from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import redirect, render
-
 from wagtail_localize.models import Translation
 
 from .models import Resource, SyncLog, SyncLogResource

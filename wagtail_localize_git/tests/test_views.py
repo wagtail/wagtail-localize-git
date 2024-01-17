@@ -6,8 +6,8 @@ from django.test import TestCase
 from django.urls import reverse
 from wagtail.models import Locale, Page
 from wagtail.test.utils import WagtailTestUtils
-
 from wagtail_localize.models import Translation, TranslationSource
+
 from wagtail_localize_git.models import Resource, SyncLog, SyncLogResource
 from wagtail_localize_git.test.models import TestPage
 

@@ -1,4 +1,3 @@
-import sys
 import unittest
 
 from pathlib import PurePosixPath
@@ -8,8 +7,8 @@ import pygit2
 
 from django.test import TestCase, override_settings
 from wagtail.models import Locale, Page
-
 from wagtail_localize.models import StringTranslation, Translation, TranslationSource
+
 from wagtail_localize_git.models import Resource, SyncLog
 from wagtail_localize_git.sync import SyncPushError, _pull, _push, get_sync_manager
 from wagtail_localize_git.test.models import TestPage
@@ -276,13 +275,12 @@ class TestPush(TestCase):
         # Check that the source and translation files were written
         # Build a dictionary of calls to RepositoryWriter.write_file(). Keyed by first argument (filename)
         # Note, this check only works on Python 3.8+
-        if sys.version_info >= (3, 8):
-            mock_calls = {
-                call.args[0]: call for call in repo.writer().write_file.mock_calls
-            }
+        mock_calls = {
+            call.args[0]: call for call in repo.writer().write_file.mock_calls
+        }
 
-            self.assertIn("templates/pages/test-page.pot", mock_calls.keys())
-            self.assertIn("locales/fr/pages/test-page.po", mock_calls.keys())
+        self.assertIn("templates/pages/test-page.pot", mock_calls.keys())
+        self.assertIn("locales/fr/pages/test-page.po", mock_calls.keys())
 
         # Check that the repo was pushed
         repo.push.assert_called_once()
