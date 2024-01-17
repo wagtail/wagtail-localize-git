@@ -2,7 +2,8 @@
 /build
 /dist
 /wagtail_localize_git.egg-info
-/.coverage
+.coverage
+.coverage.*
 /htmlcov
 /.tox
 /venv
