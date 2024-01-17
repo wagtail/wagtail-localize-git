@@ -8,7 +8,7 @@ import toml
 
 from django.test import TestCase, override_settings
 from git import PushInfo
-from wagtail.core.models import Locale
+from wagtail.models import Locale
 
 from wagtail_localize_git.git import (
     DEFAULT_BRANCH,
@@ -256,7 +256,7 @@ class TestRepositoryReader(GitTestCase):
         reader = self.repo.reader()
 
         with self.assertRaises(KeyError) as e:
-            reader.read_file("foo.txt"),
+            reader.read_file("foo.txt")
 
         self.assertEqual(e.exception.args, ("foo.txt",))
 

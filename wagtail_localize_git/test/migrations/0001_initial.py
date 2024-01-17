@@ -3,15 +3,10 @@
 from django.db import migrations, models
 import django.db.models.deletion
 import uuid
-
-try:
-    import wagtail.fields as wagtail_fields
-except ImportError:
-    import wagtail.core.fields as wagtail_fields
+import wagtail.fields as wagtail_fields
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [

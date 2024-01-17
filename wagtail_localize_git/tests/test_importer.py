@@ -7,7 +7,7 @@ import polib
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
-from wagtail.core.models import Locale, Page
+from wagtail.models import Locale, Page
 
 from wagtail_localize.models import (
     MissingRelatedObjectError,

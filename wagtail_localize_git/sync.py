@@ -8,7 +8,7 @@ import polib
 from django.conf import settings
 from django.db import transaction
 from django.utils.module_loading import import_string
-from wagtail.core.models import Locale
+from wagtail.models import Locale
 
 from wagtail_localize.models import Translation
 
