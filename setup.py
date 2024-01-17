@@ -56,7 +56,7 @@ setup(
     ],
     install_requires=[
         "Django>=3.2,<5.1",
-        "Wagtail>=4.1,<6.0",
+        "Wagtail>=4.1",
         "wagtail-localize>=1.0",
         "pygit2>=1.0,<2.0",
         "gitpython>=3.0,<4.0",
