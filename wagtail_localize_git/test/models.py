@@ -5,13 +5,12 @@ from wagtail.admin.panels import FieldPanel
 from wagtail.fields import RichTextField
 from wagtail.models import Page, TranslatableMixin
 from wagtail.snippets.models import register_snippet
-
 from wagtail_localize.fields import SynchronizedField, TranslatableField
 
 
 class TestPage(Page):
     test_charfield = models.CharField(
-        gettext_lazy("char field"), max_length=255, blank=True, null=True, default=""
+        gettext_lazy("char field"), max_length=255, blank=True, default=""
     )
     test_textfield = models.TextField(blank=True)
     test_richtextfield = RichTextField(blank=True)

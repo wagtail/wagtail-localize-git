@@ -8,12 +8,12 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
 from wagtail.models import Locale, Page
-
 from wagtail_localize.models import (
     MissingRelatedObjectError,
     Translation,
     TranslationSource,
 )
+
 from wagtail_localize_git.importer import Importer
 from wagtail_localize_git.models import Resource, SyncLog
 from wagtail_localize_git.test.models import TestPage

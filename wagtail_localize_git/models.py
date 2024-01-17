@@ -4,7 +4,6 @@ from wagtail.documents.models import AbstractDocument
 from wagtail.images.models import AbstractImage
 from wagtail.models import Locale, Page
 from wagtail.snippets.models import get_snippet_models
-
 from wagtail_localize.models import TranslatableObject
 
 
@@ -22,6 +21,9 @@ class Resource(models.Model):
 
     class Meta:
         ordering = ["path"]
+
+    def __str__(self):
+        return f"Resource ({self.pk}: {str(self.object)})"
 
     @classmethod
     def get_for_object(cls, object):
@@ -81,6 +83,12 @@ class SyncLog(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     commit_id = models.CharField(max_length=40, blank=True)
 
+    class Meta:
+        ordering = ["time"]
+
+    def __str__(self):
+        return f"SyncLog ({self.pk}: {self.action} - {self.time} - {self.commit_id})"
+
     def add_translation(self, translation):
         SyncLogResource.objects.create(
             log=self,
@@ -88,9 +96,6 @@ class SyncLog(models.Model):
             locale_id=translation.target_locale_id,
             source_id=translation.source_id,
         )
-
-    class Meta:
-        ordering = ["time"]
 
 
 class SyncLogResourceQuerySet(models.QuerySet):
@@ -133,3 +138,6 @@ class SyncLogResource(models.Model):
 
     class Meta:
         ordering = ["log__time", "resource__path"]
+
+    def __str__(self):
+        return f"SyncLogResource ({self.pk}: {self.log_id}, {self.resource_id}, {self.locale_id})"
