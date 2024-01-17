@@ -58,13 +58,12 @@ name = "wagtail_localize_git"
 
 [tool.flit.sdist]
 exclude = [
-    "wagtail_localize_git/tests",
-    "wagtail_localize_git/test",
     ".*",
     "*.db",
     "*.json",
     "*.ini",
     "*.yaml",
+    "tests",
     "CHANGELOG.md",
     "testmanage.py",
 ]
@@ -92,6 +91,6 @@ ignore = ["E501"]
 fixable = ["C4", "E", "F", "I", "UP"]
 
 [tool.ruff.isort]
-known-first-party = ["wagtail_localize_git"]
+known-first-party = ["src", "wagtail_localize_git"]
 lines-between-types = 1
 lines-after-imports = 2
