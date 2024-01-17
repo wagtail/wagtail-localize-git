@@ -256,7 +256,7 @@ class TestRepositoryReader(GitTestCase):
         reader = self.repo.reader()
 
         with self.assertRaises(KeyError) as e:
-            reader.read_file("foo.txt"),
+            reader.read_file("foo.txt")
 
         self.assertEqual(e.exception.args, ("foo.txt",))
 
