@@ -2,8 +2,9 @@ name: Ruff
 
 on:
   push:
-    - main
-    - 'stable/**'
+    branches:
+      - main
+      - 'stable/**'
   pull_request:
     branches: [main]
 
