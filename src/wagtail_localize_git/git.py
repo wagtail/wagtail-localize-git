@@ -181,7 +181,7 @@ class RepositoryWriter:
         tree = self.index.write_tree(self.repo)
 
         sig = pygit2.Signature(
-            "Wagtail Localize", "wagtail_localize_pontoon@wagtail.io"
+            "Wagtail Localize", "wagtail_localize_pontoon@wagtail.org"
         )
 
         if self.repo_is_empty:

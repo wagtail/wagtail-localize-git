@@ -54,7 +54,7 @@ class GitRepositoryUtils:
         tree = index.write_tree(repo.pygit)
 
         sig = pygit2.Signature(
-            "Wagtail Localize", "wagtail_localize_pontoon@wagtail.io"
+            "Wagtail Localize", "wagtail_localize_pontoon@wagtail.org"
         )
 
         repo.pygit.create_commit(
