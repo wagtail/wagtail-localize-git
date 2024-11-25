@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2024-11-25
+
+- Drop support for Python 3.8, Wagtail < 4.2, Django < 4.2
+- Add official support for Wagtail 5.2, 6.2, 6.3
+- Fixed breaking changes for libgit2 v1.15+
+
 ## [0.14.1] - 2024-01-18
 
 ### Changed
@@ -63,6 +69,7 @@ This release will use `main` as the default branch. To change it anything else, 
  - [Support for Wagtail 2.14](https://github.com/wagtail/wagtail-localize-git/pull/15)
 
 [unreleased]: https://github.com/wagtail/wagtail-localize-git/compare/v0.14.1...HEAD
+[0.15.0]: https://github.com/wagtail/wagtail-localize-git/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/wagtail/wagtail-localize-git/compare/v0.14.0...v0.14.1
 [0.14]: https://github.com/wagtail/wagtail-localize-git/compare/v0.13.0...v0.14.0
 [0.13]: https://github.com/wagtail/wagtail-localize-git/compare/v0.12.0...v0.13.0
