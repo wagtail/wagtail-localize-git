@@ -66,7 +66,12 @@ class GitRepositoryUtils:
             [repo.pygit.head.target],
         )
 
-        return repo.pygit.head.target.hex
+        try:
+            return repo.pygit.head.target.hex
+        except AttributeError:
+            # see https://github.com/libgit2/pygit2/blob/master/CHANGELOG.md#1150-2024-05-18
+            # remove after dropping libgit2 < 1.15
+            return str(repo.pygit.head.target)
 
     def assert_file_in_tree(self, tree, name, mode=33188, check_contents=None):
         blobs_by_name = {blob.name: blob for blob in tree.blobs}

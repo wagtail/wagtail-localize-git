@@ -96,7 +96,12 @@ class Repository:
 
     def get_head_commit_id(self):
         if not self.repo_is_empty:
-            return self.pygit.head.target.hex
+            try:
+                return self.pygit.head.target.hex
+            except AttributeError:
+                # see https://github.com/libgit2/pygit2/blob/master/CHANGELOG.md#1150-2024-05-18
+                # remove after dropping libgit2 < 1.15
+                return str(self.pygit.head.target)
 
 
 class RepositoryReader:
@@ -191,4 +196,9 @@ class RepositoryWriter:
                 [self.repo.head.target],
             )
 
-        return self.repo.head.target.hex
+        try:
+            return self.repo.head.target.hex
+        except AttributeError:
+            # see https://github.com/libgit2/pygit2/blob/master/CHANGELOG.md#1150-2024-05-18
+            # remove after dropping libgit2 < 1.15
+            return str(self.repo.head.target)

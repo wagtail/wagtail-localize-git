@@ -15,8 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - run: python -Im pip install --user ruff
+    # Keep in sync with .pre-commit-config.yaml
+    - run: python -Im pip install --user ruff==0.8.0
 
     - name: Run ruff
       working-directory: ./src
-      run: ruff --output-format=github wagtail_localize_git
+      run: ruff check --output-format=github wagtail_localize_git
